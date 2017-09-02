@@ -32,6 +32,11 @@ setup(
         'pytest-sugar',
         'tox',
     ],
+    extras_require={
+        'remote': [
+            'paramiko',
+        ],
+    },
 
     classifiers=[
         'Development Status :: 1 - Planning',
