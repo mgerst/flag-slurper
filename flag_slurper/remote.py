@@ -94,7 +94,7 @@ def plant(conf, team, flag_id, location, password, prompt_password, remote):
 @click.option('-f', '--flag', help='Flag Slug', default=None, prompt=True)
 @click.option('-l', '--location', default=None, prompt=True)
 @click.option('-P', '--password', default='cdc', envvar='REMOTE_PASS')
-@click.option('-W', '--prompt_password', is_flag=True)
+@click.option('-W', '--prompt-password', is_flag=True)
 @click.option('-s', '--search', help='Force search for flag', is_flag=True)
 @click.argument('remote')
 @pass_config
@@ -108,7 +108,7 @@ def capture(conf, team, flag, location, password, prompt_password, remote, searc
     search_glob = os.path.join(base_dir, '*flag*')
 
     if prompt_password:
-        password = click.prompt('Remote Pasword', hide_input=True)
+        password = click.prompt('Remote Password', hide_input=True)
     username, host, port = utils.parse_remote(remote)
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -134,6 +134,26 @@ def capture(conf, team, flag, location, password, prompt_password, remote, searc
                 utils.report_warning('File {} incorrect size for flag'.format(file))
     else:
         utils.report_success('Found Flag: {}'.format(planted))
+
+
+@remote.command()
+@click.option('-P', '--password', default='cdc', envvar='REMOTE_PASS')
+@click.option('-W', '--prompt-password', is_flag=True)
+@click.argument('remote')
+def infect(password, prompt_password, remote):
+    if prompt_password:
+        password = click.prompt('Remote Password', hide_input=True)
+    username, host, port = utils.parse_remote(remote)
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(host, username=username, password=password, port=port)
+
+    _, stdout, stderr = ssh.exec_command('pip install --user flag-bearer')
+    err = stderr.read()
+    if len(err) > 0:
+        utils.report_error('Failed to install flag-bearer')
+    else:
+        utils.report_success('Installed flag-bearer')
 
 
 def get_file_contents(ssh: paramiko.SSHClient, file: str) -> Union[str, bool]:
