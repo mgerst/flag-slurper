@@ -1,5 +1,5 @@
 import zipfile
-from typing import Tuple
+from typing import Tuple, Dict, Union, Callable
 
 import click
 import requests
@@ -97,3 +97,17 @@ def parse_remote(remote: str) -> Tuple[str, str, int]:
         port = int(parts[1])
 
     return username, host, port
+
+
+def prompt_choice(template: str, info: Dict[id, Dict], prompt: str = None, title: str = None) -> int:
+    if title:
+        click.echo(title)
+
+    for i, item in info.items():
+        click.echo(template.format(i=i, info=item))
+
+    if not prompt:
+        prompt = "Selection"
+    chosen = click.prompt(prompt, type=click.INT)
+
+    return chosen

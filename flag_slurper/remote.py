@@ -19,12 +19,13 @@ def remote():
 @remote.command()
 @click.option('-t', '--team', type=click.INT, default=None)
 @click.option('-f', '--flag-id', type=click.INT, default=None)
+@click.option('-F', '--flag-name', default=None)
 @click.option('-l', '--location', default=None)
 @click.option('-P', '--password', default='cdc', envvar='REMOTE_PASS')
 @click.option('-W', '--prompt-password', is_flag=True)
 @click.argument('remote')
 @pass_config
-def plant(conf, team, flag_id, location, password, prompt_password, remote):
+def plant(conf, team, flag_id, flag_name, location, password, prompt_password, remote):
     user = conf.user
     utils.check_user(user)
 
@@ -37,16 +38,25 @@ def plant(conf, team, flag_id, location, password, prompt_password, remote):
     flags = utils.get_flags(team)
     flags = {i: x for i, x in enumerate(flags)}
 
-    if flag_id is None:
-        click.echo('Pick the flag to place')
-        for flag_id, flag in flags.items():
-            # Admins can see both blue and red flags, tell them which is which
+    flag = None
+    if flag_name:
+        flags = {i: flag for i, flag in flags.items() if flag['name'] == flag_name}
+        if len(flags) == 0:
+            utils.report_error("No flag by name: {}".format(flag_name))
+            exit(1)
+        elif len(flags) == 1:
+            flag = list(flags.keys())[0]
+        else:
+            tmpl = "{i}. {info.name}"
             if user.is_admin:
-                click.echo('{}. {} ({})'.format(flag_id, flag['name'], flag['type']))
-            else:
-                click.echo('{}. {}'.format(flag_id, flag['name']))
+                tmpl = "{i}. {info.name} ({info.type})"
+            flag = utils.prompt_choice(tmpl, flags, "Which Flag", "Pick the flag to place")
+    elif flag_id is None:
+        tmpl = "{i}. {info.name}"
+        if user.is_admin:
+            tmpl = "{i}. {info.name} ({info.type})"
 
-        flag = click.prompt('Which Flag', type=click.INT)
+        flag = utils.prompt_choice(tmpl, flags, "Which Flag", "Pick the flag to place")
     else:
         utils.report_status('Flag supplied from command line')
         flag = flag_id
