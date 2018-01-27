@@ -49,6 +49,12 @@ def pwn(conf, service_list, team_list, results, verbose):
                 utils.report_error(result)
     yaml.dump(pwn_results, results, default_flow_style=False)
 
+    for cred in autolib.CredentialBag.get_instance().credentials():
+        if len(cred.works):
+            utils.report_success("Credential {} works on the following teams: {}".format(cred, cred.works))
+        else:
+            utils.report_warning("Credential {} works on no teams".format(cred))
+
 
 @autopwn.command()
 @click.option('-s', '--service-list', type=click.File('w'), default='services.yml')
