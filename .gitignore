@@ -99,3 +99,7 @@ ENV/
 .mypy_cache/
 
 .idea/
+
+teams.yml
+services.yml
+results.yml

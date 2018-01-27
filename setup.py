@@ -35,6 +35,7 @@ setup(
     extras_require={
         'remote': [
             'paramiko',
+            'pyyaml',
         ],
     },
 

@@ -62,6 +62,32 @@ def save_flags(flags, team=None):
     z.close()
 
 
+def get_teams():
+    conf = Config.get_instance()
+    url = '{}/teams.json'.format(conf.api_url)
+
+    resp = requests.get(url)
+    resp.raise_for_status()
+    resp = resp.json()
+    return resp
+
+
+def get_team_map(teams):
+    map = {team['number']: team for team in teams}
+    return map
+
+
+# TODO: Should be using the /services.json endpoint but it's currently 500'ing
+def get_service_status():
+    conf = Config.get_instance()
+    url = '{}/servicestatus.json'.format(conf.api_url)
+
+    resp = requests.get(url)
+    resp.raise_for_status()
+    resp = resp.json()
+    return resp
+
+
 def report_error(msg):
     msg = '{} {}'.format(click.style('[!]', fg='red'), msg)
     click.echo(msg)

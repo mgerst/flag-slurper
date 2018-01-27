@@ -58,6 +58,8 @@ def plant(conf, team):
 try:
     import paramiko  # noqa
     from .remote import remote
+    from .autopwn import autopwn
     cli.add_command(remote)
+    cli.add_command(autopwn)
 except ImportError:
     pass
