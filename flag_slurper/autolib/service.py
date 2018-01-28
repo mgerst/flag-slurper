@@ -49,5 +49,5 @@ def pwn_service(service: Service) -> Result:
     if proto not in PWN_FUNCS:
         return Result(service=service, message="Protocol not supported for autopwn", success=False, skipped=True)
 
-    message, success, skipped = PWN_FUNCS[proto](url, port, service.team_number)
+    message, success, skipped = PWN_FUNCS[proto](url, port, service)
     return Result(service=service, message=message, success=success, skipped=skipped)

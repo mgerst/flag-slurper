@@ -49,9 +49,12 @@ def pwn(conf, service_list, team_list, results, verbose):
                 utils.report_error(result)
     yaml.dump(pwn_results, results, default_flow_style=False)
 
-    for cred in autolib.CredentialBag.get_instance().credentials():
+    for cred in autolib.credential_bag.credentials():
         if len(cred.works):
-            utils.report_success("Credential {} works on the following teams: {}".format(cred, cred.works))
+            def display_service(service: autolib.Service):
+                return "{}/{}".format(service.team_number, service.service_name)
+
+            utils.report_success("Credential {} works on the following teams: \n\t- {}".format(cred, "\n\t- ".join(map(display_service, cred.works))))
         else:
             utils.report_warning("Credential {} works on no teams".format(cred))
 
