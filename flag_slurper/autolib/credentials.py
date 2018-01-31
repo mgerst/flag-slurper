@@ -32,8 +32,6 @@ class Credential:
 
 
 class CredentialBag():
-    instance = None
-
     def __init__(self):
         self.creds = {
             'root': {Credential('root', 'cdc')},
@@ -50,3 +48,24 @@ class CredentialBag():
 
 
 credential_bag = CredentialBag()
+
+
+class Flag:
+    def __init__(self, team: int, service: 'Service', contents: str):
+        self.team = team
+        self.service = service
+        self.contents = contents
+
+
+class FlagBag:
+    """
+    Manages the flags found during exploitation.
+    """
+    def __init__(self):
+        self.flags = []
+
+    def add_flag(self, service: 'Service', contents: str):
+        self.flags.append(service.team_number, service, contents)
+
+
+flag_bag = FlagBag()

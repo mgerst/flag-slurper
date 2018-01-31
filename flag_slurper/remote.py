@@ -1,11 +1,10 @@
 import os
 from io import BytesIO
-from typing import Union
 
 import click
 import paramiko
 
-from . import utils
+from . import utils, autolib
 from .config import Config
 
 pass_config = click.make_pass_decorator(Config)
@@ -91,7 +90,7 @@ def plant(conf, team, flag_id, flag_name, location, password, prompt_password, r
     sftp.putfo(pkt, location)
     utils.report_status('Verifying flag plant')
 
-    planted_contents = get_file_contents(ssh, location)
+    planted_contents = autolib.exploit.get_file_contents(ssh, location)
 
     if planted_contents != data:
         utils.report_warning('Planted flag data does not match, double check the plant')
@@ -124,7 +123,7 @@ def capture(conf, team, flag, location, password, prompt_password, remote, searc
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(host, username=username, password=password, port=port)
 
-    planted = get_file_contents(ssh, location)
+    planted = autolib.exploit.get_file_contents(ssh, location)
     if not planted or search:
         _, stdout, stderr = ssh.exec_command('ls {}'.format(search_glob))
 
@@ -135,7 +134,7 @@ def capture(conf, team, flag, location, password, prompt_password, remote, searc
         print("Found possible flags:", ', '.join(files))
         for file in files:
             utils.report_status('Checking possible flag: {}'.format(file))
-            contents = get_file_contents(ssh, file)
+            contents = autolib.exploit.get_file_contents(ssh, file)
             if not contents:
                 utils.report_warning('File {} does not contain flag'.format(file))
             elif 10 < len(contents) < 60:
@@ -164,12 +163,3 @@ def infect(password, prompt_password, remote):
         utils.report_error('Failed to install flag-bearer')
     else:
         utils.report_success('Installed flag-bearer')
-
-
-def get_file_contents(ssh: paramiko.SSHClient, file: str) -> Union[str, bool]:
-    _, stdout, stderr = ssh.exec_command('cat {}'.format(file))
-    err = stderr.read()
-    if len(err) > 0:
-        return False
-
-    return stdout.read().strip().decode('utf-8')
