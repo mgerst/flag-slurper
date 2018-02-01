@@ -9,7 +9,7 @@ from flag_slurper import utils
 from flag_slurper.models import User
 
 # Run tests that might reach out to the real IScorE
-EXTERNAL_TESTS = False
+EXTERNAL_TESTS = True
 
 
 @pytest.mark.parametrize('remote,expected', [
@@ -133,7 +133,7 @@ def test_check_user(user, expected):
 @vcr.use_cassette('fixtures/servicestatus.yaml')
 def test_get_service_status():
     services = utils.get_service_status()
-    assert services[0]['protocol'] == 'HTTP'
+    assert services[0]['service_name'] == 'DNS'
 
 
 @pytest.mark.skipif(not EXTERNAL_TESTS, reason="External tests disabled")
@@ -141,5 +141,5 @@ def test_get_service_status():
 def test_get_teams(config):
     teams = utils.get_teams()
 
-    assert len(teams) == 28
+    assert len(teams) == 20
 

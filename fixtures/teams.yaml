@@ -1,0 +1,42 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept: ['*/*']
+      Accept-Encoding: ['gzip, deflate']
+      Connection: [keep-alive]
+      User-Agent: [python-requests/2.18.4]
+    method: GET
+    uri: https://iscore.iseage.org/api/v1/teams.json
+  response:
+    body:
+      string: !!binary |
+        H4sIAAeHc1oC/7WWX2+bMBTFv4rFy17aBIMdIG9T0q5V1ahbUu1hmiJjbgitg5GB/VG17z6zquCt
+        tJll9QHJMrL5cXzuuf7y4BWZNw8JPvHK9pCC8uaBHrIDeHNvsVygDbADCrwTT8hc6rl901Tz6bSo
+        uVQwKWpgOUykyqd1w5qCT9tKSJZNG72sW1FPU9FCN5pUZa636V5sWyX0Vt0w0Fu0POMTLg/6bd5C
+        3Wyz4ltRF7L05jsmavh18kQZDpTkOSV5M0piRZkMlNjvMYlPHjFXskHnsi0zB9xcylzAKd8reYBT
+        UEqqcXLs26BTQ2A8ojB+O4nxEY0b1RqcscGZ9JzXm0t0ud4g7ED5h/Bm9WGEMLGS0nBB4D9DdKmo
+        V6rJ7rSNosdD1V+tb/WBO/Dp1dubVlUCXjhqu6KfDZRRD3nW7AvOBFoLxu9B1S6+VKzMJnmxe04a
+        WYEaphw8uYSD5Kr7MvoEVVMIqLtBmwo9I3foSlMyB/qnTSd31YjUVpYldPiB2WCHhYsXXi/6mRVe
+        NODFPV7dZhJpq7EaHDAz+b3spsYxYxvMmW8UPu45N8q/I+XeVzR04KRpwHAGgT5tGKt/bEMaGRFF
+        hohaMnWPLqRyE5SV9/tuj3FfkiNB9XfaB0ZOhT3n+8eedMFq3VLRqpt8s+YUWhmVDLy0x3133Sod
+        WSU6Y7p1O6DGnI6LSq3C34hVHP1jU0XSFEcOjEFMYn+cEluFamxW09CjVp219C1KcRclRdvsQZ1y
+        KQTkQGkW+jsKkAYRG2cPrDoXNdgxHrlNudxTjhjWKgioEfx4SP5zYJ0+NbqtHEBZ+vnjTVJebonv
+        /9DPC66wawVGIgyBsAauS6z5iZZMN93S5U6Q4F0MlGdJGKT+LExpPNPXJUgpJUkIGel/ZlT9/0qL
+        r78BhGTBCnwNAAA=
+    headers:
+      Allow: ['GET, DELETE, HEAD, OPTIONS']
+      Connection: [keep-alive]
+      Content-Encoding: [gzip]
+      Content-Length: ['695']
+      Content-Type: [application/json]
+      Date: ['Thu, 01 Feb 2018 21:30:47 GMT']
+      Server: [nginx]
+      Strict-Transport-Security: [max-age=5184000; includeSubdomains]
+      Vary: ['Accept, Accept-Encoding, Cookie']
+      X-Content-Type-Options: [nosniff]
+      X-Frame-Options: [DENY, DENY]
+      X-Robots-Tag: [none]
+      X-XSS-Protection: [1; mode=block]
+    status: {code: 200, message: OK}
+version: 1
