@@ -1,6 +1,5 @@
 from click.testing import CliRunner
 
-
 from flag_slurper.cli import cli, pass_conf
 from flag_slurper.config import Config
 

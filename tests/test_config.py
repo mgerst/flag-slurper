@@ -1,5 +1,7 @@
 from unittest import mock
 
+import pytest
+
 from flag_slurper.config import Config
 from flag_slurper.models import User
 
@@ -59,3 +61,13 @@ def test_config_user(config):
         get_user.return_value = user
         result = config.user
         assert result == user
+
+
+@pytest.mark.skip("Can't mock input")
+def test_config_prompt_token(config, capsys):
+    with mock.patch.object(__builtins__, 'input') as input:
+        input.return_value = "API_TOKEN"
+        config.prompt_creds()
+        captured = capsys.readouterr()
+        assert captured.out == "Enter your IScorE API Token (leave blank to use your credentials)\n"
+        assert config['iscore']['api_token'] == 'API_TOKEN'
