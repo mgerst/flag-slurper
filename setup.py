@@ -10,6 +10,14 @@ def read(fname):
     return open(os.path.join(ROOT, fname)).read()
 
 
+tests_require = [
+    'pytest',
+    'pytest-sugar',
+    'tox',
+    'vcrpy',
+]
+
+
 setup(
     name='flag_slurper',
     version=__version__,
@@ -27,16 +35,13 @@ setup(
         'requests',
         'click',
     ],
-    tests_require=[
-        'pytest',
-        'pytest-sugar',
-        'tox',
-    ],
+    tests_require=tests_require,
     extras_require={
         'remote': [
             'paramiko',
             'pyyaml',
         ],
+        'tests': tests_require,
     },
 
     classifiers=[

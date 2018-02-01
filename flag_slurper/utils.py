@@ -1,3 +1,4 @@
+import os
 import zipfile
 from typing import Tuple, Dict, Union, Callable
 
@@ -45,16 +46,19 @@ def get_flags(team=None):
     return resp
 
 
-def save_flags(flags, team=None):
+def save_flags(flags, team=None, base_path=None):
     if team:
         filename = 'team_{}_flags.zip'.format(team)
     else:
         filename = 'all_team_flags.zip'
 
+    if base_path:
+        filename = os.path.join(base_path, filename)
+
     z = zipfile.ZipFile(filename, 'a', compression=zipfile.ZIP_DEFLATED)
 
     for flag in flags.values():
-        flags['data'] += '\n'
+        flag['data'] += '\n'
         z.writestr(flag['filename'], flag['data'])
 
     for zipped_file in z.filelist:

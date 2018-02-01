@@ -1,8 +1,15 @@
+import zipfile
+
 import click
-from click.testing import CliRunner
 import pytest
+import vcr
+from click.testing import CliRunner
 
 from flag_slurper import utils
+from flag_slurper.models import User
+
+# Run tests that might reach out to the real IScorE
+EXTERNAL_TESTS = False
 
 
 @pytest.mark.parametrize('remote,expected', [
@@ -38,3 +45,101 @@ def test_prompt_choice(options, expected):
     result = runner.invoke(cmd, input='1\n')
     assert not result.exception
     assert result.output == expected
+
+
+@pytest.mark.parametrize('method,input,expected', (
+    (utils.report_success, 'It Works!', '[+] It Works!\n'),
+    (utils.report_status, 'Status Message', '[-] Status Message\n'),
+    (utils.report_warning, 'Warning Message', '[*] Warning Message\n'),
+    (utils.report_error, 'Error Message', '[!] Error Message\n'),
+))
+def test_report_utils(method, input, expected):
+    @click.command()
+    def cmd():
+        method(input)
+
+    runner = CliRunner()
+    result = runner.invoke(cmd)
+    assert not result.exception
+    assert result.output == expected
+
+
+def test_team_map():
+    teams = [
+        {'number': 1, 'name': 'Test Team 1'},
+        {'number': 3, 'name': 'Test Team 3'},
+        {'number': 2, 'name': 'Test Team 2'},
+    ]
+    team_map = utils.get_team_map(teams)
+    assert team_map[1] == teams[0]
+    assert team_map[2] == teams[2]
+    assert team_map[3] == teams[1]
+
+
+def test_save_flags(tmpdir):
+    flags = {
+        1: {'filename': 'team_1_www_etc.flag', 'data': 'TESTDATA'},
+    }
+    utils.save_flags(flags, team=1, base_path=str(tmpdir))
+    flag_zip = tmpdir.join("team_1_flags.zip")
+    assert flag_zip.check()
+
+    z = zipfile.ZipFile(str(flag_zip))
+    contents = z.read('team_1_www_etc.flag')
+    assert contents.decode('utf-8') == 'TESTDATA\n'
+
+
+USER_ADMIN = {
+    'first_name': 'Test',
+    'last_name': 'Admin',
+    'username': 'admin',
+    'is_superuser': True,
+    'profile': {'is_red': True},
+}
+
+USER_RED = {
+    'first_name': 'Test',
+    'last_name': 'Red',
+    'username': 'red',
+    'is_superuser': False,
+    'profile': {'is_red': True},
+}
+
+USER_BLUE = {
+    'first_name': 'Test',
+    'last_name': 'Red',
+    'username': 'red',
+    'is_superuser': False,
+    'profile': {'is_red': False},
+}
+
+
+@pytest.mark.parametrize('user,expected', (
+    (User(USER_ADMIN), 0),
+    (User(USER_RED), 0),
+    (User(USER_BLUE), 2),
+))
+def test_check_user(user, expected):
+    @click.command()
+    def cmd():
+        utils.check_user(user)
+
+    runner = CliRunner()
+    result = runner.invoke(cmd)
+    assert result.exit_code == expected
+
+
+@pytest.mark.skipif(not EXTERNAL_TESTS, reason="External tests disabled")
+@vcr.use_cassette('fixtures/servicestatus.yaml')
+def test_get_service_status():
+    services = utils.get_service_status()
+    assert services[0]['protocol'] == 'HTTP'
+
+
+@pytest.mark.skipif(not EXTERNAL_TESTS, reason="External tests disabled")
+@vcr.use_cassette('fixtures/teams.yaml')
+def test_get_teams(config):
+    teams = utils.get_teams()
+
+    assert len(teams) == 28
+

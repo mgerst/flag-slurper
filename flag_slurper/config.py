@@ -14,12 +14,15 @@ class Config(ConfigParser):
         self._user = None
 
     @classmethod
-    def load(cls, extra: Optional[str] = None):
+    def load(cls, extra: Optional[str] = None, noflagrc: bool = False):
         conf = cls()
         conffiles = [
             str(ROOT / 'default.ini'),
-            str((Path('~') / '.flagrc').expanduser()),
         ]
+
+        if not noflagrc:
+            conffiles.append(str((Path('~') / '.flagrc').expanduser()))
+
         if extra:
             conffiles.append(extra)
         conf.read(conffiles)
