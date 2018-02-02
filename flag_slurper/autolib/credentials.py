@@ -1,3 +1,6 @@
+from typing import Tuple
+
+
 class Credential:
     def __init__(self, username: str, password: str):
         self.username = username
@@ -51,7 +54,7 @@ credential_bag = CredentialBag()
 
 
 class Flag:
-    def __init__(self, team: int, service: 'Service', contents: str):
+    def __init__(self, team: int, service: 'Service', contents: Tuple[str]):
         self.team = team
         self.service = service
         self.contents = contents
@@ -64,7 +67,7 @@ class FlagBag:
     def __init__(self):
         self.flags = []
 
-    def add_flag(self, service: 'Service', contents: str):
+    def add_flag(self, service: 'Service', contents: Tuple[str, str]):
         self.flags.append(service.team_number, service, contents)
 
 

