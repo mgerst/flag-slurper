@@ -96,9 +96,9 @@ def results(results):
         utils.report_status("Found the following flags:")
 
         for flag in pwn_results['flags']:
-            click.echo(
-                "\t{}/{}: Has flag at {} with contents {}".format(flag.service.team_number, flag.service.service_name,
-                                                                  flag.contents[0], flag.contents[1]))
+            utils.report_success(
+                "{}/{}: Has flag at {} with contents {}".format(flag.service.team_number, flag.service.service_name,
+                                                                flag.contents[0], flag.contents[1]))
 
     click.echo()
     utils.report_status("Found the following credentials")
