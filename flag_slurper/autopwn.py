@@ -23,8 +23,7 @@ def autopwn():
 @click.option('-t', '--team-list', type=click.File('r'), default='teams.yml')
 @click.option('-r', '--results', type=click.File('w'), default='results.yml')
 @click.option('-v', '--verbose', type=click.BOOL, default=False)
-@pass_config
-def pwn(conf, service_list, team_list, results, verbose):
+def pwn(service_list, team_list, results, verbose):
     utils.report_status("Starting AutoPWN")
     teams = yaml.load(team_list)
     team_map = utils.get_team_map(teams)
