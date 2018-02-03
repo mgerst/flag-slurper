@@ -22,7 +22,7 @@ def test_cli_version():
     runner = CliRunner()
     result = runner.invoke(cli, ['cmd'])
     assert result.exit_code == 0
-    assert result.output == "Flag Slurper v0.1\n"
+    assert result.output == "Flag Slurper v0.2\n"
 
 
 def test_cli_pass_config():
