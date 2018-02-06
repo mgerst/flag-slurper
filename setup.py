@@ -12,8 +12,7 @@ def read(fname):
 
 tests_require = [
     'pytest',
-    # Until it's fixed for pytest 3.4.0
-    # 'pytest-sugar',
+    'pytest-sugar',
     'tox',
     'vcrpy',
 ]
