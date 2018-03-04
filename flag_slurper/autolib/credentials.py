@@ -68,7 +68,7 @@ class FlagBag:
         self.flags = []
 
     def add_flag(self, service: 'Service', contents: Tuple[str, str]):
-        self.flags.append(service.team_number, service, contents)
+        self.flags.append(Flag(service.team_number, service, contents))
 
 
 flag_bag = FlagBag()
