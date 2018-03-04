@@ -1,0 +1,7 @@
+---
+_version: "1.0"  # project.yml version
+project: ISU2-18
+base: ~/cdcs/isu2-2018
+results: results.yml
+teams: teams.yml
+services: services.yml

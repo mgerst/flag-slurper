@@ -34,12 +34,13 @@ setup(
     install_requires=[
         'requests',
         'click',
+        'pyyaml',
+        'schema',
     ],
     tests_require=tests_require,
     extras_require={
         'remote': [
             'paramiko',
-            'pyyaml',
         ],
         'tests': tests_require,
     },
