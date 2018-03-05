@@ -1,17 +1,7 @@
-from textwrap import dedent
-
 import pytest
 from schema import SchemaMissingKeyError, SchemaUnexpectedTypeError
-from yaml import safe_load
 
-from flag_slurper.project import project_schema, detect_version, project_schema_v1_0
-
-
-@pytest.fixture
-def make_project():
-    def _make(text):
-        return safe_load(dedent(text).strip())
-    return _make
+from flag_slurper.project import project_schema, detect_version, project_schema_v1_0, Project
 
 
 def test_project_schema_valid(make_project):
@@ -132,3 +122,22 @@ def test_project_detect_schema_missing_version(make_project):
 
     with pytest.raises(KeyError, match="_version is a required key"):
         detect_version(project)
+
+
+def test_project_singleton():
+    project = Project.get_instance()
+    assert project is Project.get_instance()
+
+
+def test_load_project(create_project):
+    tmpdir = create_project("""
+    ---
+    _version: "1.0"
+    project: ISU2-18
+    base: {dir}/isu2-18
+    """)
+
+    project = Project.get_instance()
+    project.load(str(tmpdir.join('project.yml')))
+
+    assert project._project_data is not None

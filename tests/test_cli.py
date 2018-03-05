@@ -5,6 +5,7 @@ from click.testing import CliRunner
 
 from flag_slurper.cli import cli, pass_conf
 from flag_slurper.config import Config
+from flag_slurper.project import Project
 
 
 def test_cli_usage():
@@ -48,4 +49,22 @@ def test_plant(check_user):
     runner = CliRunner()
     result = runner.invoke(cli, ['plant'])
     assert check_user.called
+    assert result.exit_code == 0
+
+
+def test_cli_load_project(create_project):
+    @cli.command()
+    def cmd():
+        p = Project.get_instance()
+        assert p._project_data is not None
+
+    tmpdir = create_project("""
+    ---
+    _version: "1.0"
+    project: ISU2-18
+    base: {dir}/isu2-18
+    """)
+    runner = CliRunner()
+    result = runner.invoke(cli, ['--project', str(tmpdir.join('project.yml')), 'cmd'])
+
     assert result.exit_code == 0

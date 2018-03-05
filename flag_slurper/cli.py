@@ -3,6 +3,7 @@ import click
 from . import __version__
 from . import utils
 from .config import Config
+from .project import Project
 
 CONTEXT_SETTINGS = {
     'help_option_names': ['-h', '--help'],
@@ -15,12 +16,17 @@ pass_conf = click.make_pass_decorator(Config)
 @click.option('-c', '--config', type=click.Path(), envvar='CONFIG_FILE')
 @click.option('--iscore-url', envvar='ISCORE_URL', default=None)
 @click.option('--api-token', envvar='ISCORE_API_TOKEN', default=None)
+@click.option('--project', envvar='SLURPER_PROJECT', type=click.Path(), default=None)
 @click.pass_context
-def cli(ctx, config, iscore_url, api_token):
+def cli(ctx, config, iscore_url, api_token, project):
     ctx.obj = Config.load(config)
     ctx.obj.cond_set('iscore', 'url', iscore_url)
     ctx.obj.cond_set('iscore', 'api_token', api_token)
     click.echo('Flag Slurper v{}'.format(__version__))
+
+    if project:
+        p = Project.get_instance()
+        p.load(project)
 
 
 @cli.command()
