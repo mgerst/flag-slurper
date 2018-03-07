@@ -5,6 +5,7 @@ import yaml
 
 from . import utils, autolib
 from .config import Config
+from .project import Project
 
 pass_config = click.make_pass_decorator(Config)
 
@@ -19,9 +20,9 @@ def autopwn():
 
 
 @autopwn.command()
-@click.option('-s', '--service-list', type=click.File('r'), default='services.yml')
-@click.option('-t', '--team-list', type=click.File('r'), default='teams.yml')
-@click.option('-r', '--results', type=click.File('w'), default='results.yml')
+@click.option('-s', '--service-list', type=click.File('r'), default='services.yml', callback=Project.services)
+@click.option('-t', '--team-list', type=click.File('r'), default='teams.yml', callback=Project.teams)
+@click.option('-r', '--results', type=click.File('w'), default='results.yml', callback=Project.results)
 @click.option('-v', '--verbose', type=click.BOOL, default=False)
 def pwn(service_list, team_list, results, verbose):
     utils.report_status("Starting AutoPWN")

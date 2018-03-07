@@ -4,6 +4,15 @@ from schema import SchemaMissingKeyError, SchemaUnexpectedTypeError
 from flag_slurper.project import project_schema, detect_version, project_schema_v1_0, Project
 
 
+@pytest.yield_fixture(scope='function', autouse=True)
+def project_manage():
+    """
+    Clear out the Project singleton after each use.
+    """
+    yield
+    Project.instance = None
+
+
 def test_project_schema_valid(make_project):
     result = project_schema.validate(make_project("""
     ---
@@ -141,3 +150,21 @@ def test_load_project(create_project):
     project.load(str(tmpdir.join('project.yml')))
 
     assert project._project_data is not None
+
+
+def test_project_disabled():
+    p = Project.get_instance()
+    assert not p.enabled
+
+
+def test_project_enabled(create_project):
+    tmpdir = create_project("""
+    ---
+    _version: "1.0"
+    project: ISU2-18
+    base: {dir}/isu2-18
+    """)
+
+    p = Project.get_instance()
+    p.load(str(tmpdir.join('project.yml')))
+    assert p.enabled
