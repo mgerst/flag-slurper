@@ -12,20 +12,25 @@ CONTEXT_SETTINGS = {
 pass_conf = click.make_pass_decorator(Config)
 
 
-@click.group(context_settings=CONTEXT_SETTINGS)
+@click.group(context_settings=CONTEXT_SETTINGS, invoke_without_command=True)
 @click.option('-c', '--config', type=click.Path(), envvar='CONFIG_FILE')
 @click.option('--iscore-url', envvar='ISCORE_URL', default=None)
 @click.option('--api-token', envvar='ISCORE_API_TOKEN', default=None)
 @click.option('-p', '--project', envvar='SLURPER_PROJECT', type=click.Path(), default=None)
-@click.option('-v', '--version', default=False)
+@click.option('-v', '--version', default=False, is_flag=True)
 @click.pass_context
 def cli(ctx, config, iscore_url, api_token, project, version):
     ctx.obj = Config.load(config)
     ctx.obj.cond_set('iscore', 'url', iscore_url)
     ctx.obj.cond_set('iscore', 'api_token', api_token)
 
-    if version:
+    if version or ctx.invoked_subcommand is None:
         click.echo('Flag Slurper v{}'.format(__version__))
+    if ctx.invoked_subcommand is None:
+        click.echo('\nSubcommand required.\n')
+
+        click.echo(ctx.get_help())
+        return
 
     if project:
         p = Project.get_instance()

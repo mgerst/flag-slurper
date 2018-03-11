@@ -1,6 +1,9 @@
 import pytest
+import yaml
+from click.testing import CliRunner
 from schema import SchemaMissingKeyError, SchemaUnexpectedTypeError
 
+from flag_slurper.cli import cli
 from flag_slurper.project import project_schema, detect_version, project_schema_v1_0, Project
 
 
@@ -149,7 +152,7 @@ def test_load_project(create_project):
     project = Project.get_instance()
     project.load(str(tmpdir.join('project.yml')))
 
-    assert project._project_data is not None
+    assert project.project_data is not None
 
 
 def test_project_disabled():
@@ -168,3 +171,127 @@ def test_project_enabled(create_project):
     p = Project.get_instance()
     p.load(str(tmpdir.join('project.yml')))
     assert p.enabled
+
+
+@pytest.fixture
+def basic_project(create_project):
+    tmpdir = create_project("""
+    _version: "1.0"
+    project: ISU2-18
+    base: {dir}/isu2-18
+    """)
+    p = Project.get_instance()
+    p.load(str(tmpdir.join('project.yml')))
+    return p
+
+
+def test_project_default_empty(basic_project):
+    p = basic_project
+    default = p.default('results')
+    assert default() is None
+
+
+def test_project_default_given(basic_project):
+    p = basic_project
+    default = p.default('results', 'res.yml')
+    assert default() == 'res.yml'
+
+
+def test_project_default_from_project(create_project):
+    tmpdir = create_project("""
+    _version: "1.0"
+    project: ISU2-18
+    base: {dir}/isu2-18
+    results: cool.yml
+    """)
+    p = Project.get_instance()
+    p.load(str(tmpdir.join('project.yml')))
+    default = p.default('results')
+    assert default() == "cool.yml"
+
+
+def test_project_default_transform(basic_project):
+    p = basic_project
+    default = p.default('_version', transform=lambda x: round(float(x)))
+    assert default() == 1
+
+
+def test_project_default_enabled():
+    p = Project.get_instance()
+    assert p.enabled is False
+
+    default = p.default('test', 'def')
+    assert default() == 'def'
+
+
+def test_project_create_base(create_project):
+    tmpdir = create_project("""
+    _version: "1.0"
+    project: ISU2-18
+    base: {dir}/isu2-18
+    """)
+    p = Project.get_instance()
+    p.load(str(tmpdir.join('project.yml')))
+
+    assert not tmpdir.join('isu2-18').exists()
+    base = p.base
+    assert tmpdir.join('isu2-18').exists()
+    assert str(base) == str(tmpdir.join('isu2-18'))
+
+
+class TestCli:
+    def test_project_init(self, tmpdir):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['project', 'init', '-n', 'test', '-b', str(tmpdir)])
+        assert result.exit_code == 0
+        assert 'Project created' in result.output
+
+    def test_project_created(self, tmpdir):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['project', 'init', '-n', 'test', '-b', str(tmpdir)])
+        assert result.exit_code == 0
+
+        expected = {
+            '_version': '1.0',
+            'base': str(tmpdir),
+            'project': 'test',
+        }
+
+        project_file = tmpdir.join('project.yml').read()
+        data = yaml.safe_load(project_file)
+        assert expected == data
+
+    def test_project_subdir_create(self, tmpdir):
+        assert not tmpdir.join('sub').exists()
+        runner = CliRunner()
+        result = runner.invoke(cli, ['project', 'init', '-n', 'test', '-b', str(tmpdir) + "/sub"])
+        assert result.exit_code == 0
+
+        assert tmpdir.join('sub').join('project.yml').exists()
+
+    def test_project_create_with_options(self, tmpdir):
+        runner = CliRunner()
+        result = runner.invoke(cli, ['project', 'init', '-n', 'test', '-b', str(tmpdir), '-t', 't.yml', '-s', 's.yml', '-r', 'r.yml'])
+        assert result.exit_code == 0
+
+        expected = {
+            '_version': '1.0',
+            'base': str(tmpdir),
+            'project': 'test',
+            'teams': 't.yml',
+            'services': 's.yml',
+            'results': 'r.yml',
+        }
+
+        project_file = tmpdir.join('project.yml').read()
+        data = yaml.safe_load(project_file)
+        assert expected == data
+
+    def test_project_env(self, basic_project):
+        base = basic_project.base
+        runner = CliRunner()
+        result = runner.invoke(cli, ['project', 'env', str(base)])
+        assert result.exit_code == 0
+        assert 'export SLURPER_PROJECT={}'.format(base) in result.output
+        assert 'export unslurp' in result.output
+        assert 'Set {} as current project.'.format(base) in result.output

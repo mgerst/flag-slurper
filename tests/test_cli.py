@@ -10,6 +10,13 @@ from flag_slurper.project import Project
 
 def test_cli_usage():
     runner = CliRunner()
+    result = runner.invoke(cli, ['-h'])
+    assert "Usage: " in result.output
+    assert result.exit_code == 0
+
+
+def test_cli_bare_usage():
+    runner = CliRunner()
     result = runner.invoke(cli)
     assert "Usage: " in result.output
     assert result.exit_code == 0
@@ -21,7 +28,7 @@ def test_cli_version():
         pass
 
     runner = CliRunner()
-    result = runner.invoke(cli, ['cmd'])
+    result = runner.invoke(cli, ['-v', 'cmd'])
     assert result.exit_code == 0
     assert result.output == "Flag Slurper v0.2\n"
 
@@ -56,7 +63,7 @@ def test_cli_load_project(create_project):
     @cli.command()
     def cmd():
         p = Project.get_instance()
-        assert p._project_data is not None
+        assert p.project_data is not None
 
     tmpdir = create_project("""
     ---
