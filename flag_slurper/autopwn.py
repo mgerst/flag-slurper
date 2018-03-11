@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 import click
+import pathlib
 import yaml
 
 from . import utils, autolib
@@ -20,9 +21,9 @@ def autopwn():
 
 
 @autopwn.command()
-@click.option('-s', '--service-list', type=click.File('r'), default='services.yml', callback=Project.services)
-@click.option('-t', '--team-list', type=click.File('r'), default='teams.yml', callback=Project.teams)
-@click.option('-r', '--results', type=click.File('w'), default='results.yml', callback=Project.results)
+@click.option('-s', '--service-list', type=click.File('r'), default=Project.default('services', 'services.yml'))
+@click.option('-t', '--team-list', type=click.File('r'), default=Project.default('teams', 'teams.yml'))
+@click.option('-r', '--results', type=click.File('w'), default=Project.default('results', 'results.yml'))
 @click.option('-v', '--verbose', type=click.BOOL, default=False)
 def pwn(service_list, team_list, results, verbose):
     utils.report_status("Starting AutoPWN")
@@ -65,12 +66,22 @@ def pwn(service_list, team_list, results, verbose):
 
 
 @autopwn.command()
-@click.option('-s', '--service-list', type=click.File('w'), default='services.yml')
-@click.option('-t', '--team-list', type=click.File('w'), default='teams.yml')
+@click.option('-s', '--service-list', type=click.Path(), default=Project.default('services', 'services.yml'))
+@click.option('-t', '--team-list', type=click.Path(), default=Project.default('teams', 'teams.yml'))
 def generate(service_list, team_list):
+    service_list = pathlib.Path(service_list)
+    team_list = pathlib.Path(team_list)
+
+    p = Project.get_instance()
+    if p.enabled:
+        service_list = p.base / service_list
+        team_list = p.base / team_list
+
     teams = utils.get_teams()
-    yaml.dump(teams, team_list, default_flow_style=False)
-    utils.report_success("Fetched team list")
+
+    with open(str(team_list), 'w') as fp:
+        yaml.dump(teams, fp, default_flow_style=False)
+        utils.report_success("Wrote team list to: {}".format(team_list))
 
     # TODO: When /services.json gets fixed, use get_services()
     service_status = utils.get_service_status()
@@ -81,12 +92,14 @@ def generate(service_list, team_list):
         team_number = status['team_number']
         mapping[team_number].append(status)
     mapping = dict(mapping)
-    yaml.dump(mapping, service_list, default_flow_style=False)
-    utils.report_success("Fetched service list")
+
+    with open(str(service_list), 'w') as fp:
+        yaml.dump(mapping, fp, default_flow_style=False)
+        utils.report_success("Wrote service list to: {}".format(service_list))
 
 
 @autopwn.command()
-@click.option('-r', '--results', type=click.File('r'), default='results.yml')
+@click.option('-r', '--results', type=click.File('r'), default=Project.default('results', 'results.yml'))
 def results(results):
     pwn_results = yaml.load(results)
 

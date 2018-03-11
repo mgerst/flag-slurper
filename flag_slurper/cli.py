@@ -16,13 +16,16 @@ pass_conf = click.make_pass_decorator(Config)
 @click.option('-c', '--config', type=click.Path(), envvar='CONFIG_FILE')
 @click.option('--iscore-url', envvar='ISCORE_URL', default=None)
 @click.option('--api-token', envvar='ISCORE_API_TOKEN', default=None)
-@click.option('--project', envvar='SLURPER_PROJECT', type=click.Path(), default=None)
+@click.option('-p', '--project', envvar='SLURPER_PROJECT', type=click.Path(), default=None)
+@click.option('-v', '--version', default=False)
 @click.pass_context
-def cli(ctx, config, iscore_url, api_token, project):
+def cli(ctx, config, iscore_url, api_token, project, version):
     ctx.obj = Config.load(config)
     ctx.obj.cond_set('iscore', 'url', iscore_url)
     ctx.obj.cond_set('iscore', 'api_token', api_token)
-    click.echo('Flag Slurper v{}'.format(__version__))
+
+    if version:
+        click.echo('Flag Slurper v{}'.format(__version__))
 
     if project:
         p = Project.get_instance()
@@ -59,6 +62,11 @@ def plant(conf, team):
         exit(1)
     flag = flags[flag]
     click.echo('Flag: {}'.format(flag['data']))
+
+
+# Load additional commands
+from .project import project
+cli.add_command(project)
 
 # Feature detect remote functionality
 try:
