@@ -8,6 +8,7 @@ from yaml import safe_load
 
 from . import utils
 
+
 project_schema_v1_0 = Schema({
     '_version': Use(str, error='Must include _version'),
     'project': str,
@@ -15,6 +16,15 @@ project_schema_v1_0 = Schema({
     Optional('results'): Use(Path, error='results must be a path'),
     Optional('teams'): Use(Path, error='teams must be a path'),
     Optional('services'): Use(Path, error='services must be a path'),
+    Optional('flags'): Schema([
+        {
+            'service': str,
+            'type': lambda x: x in ['blue', 'red'],
+            'location': str,
+            'name': str,
+            'search': bool,
+        }
+    ]),
 })
 
 project_schema = project_schema_v1_0

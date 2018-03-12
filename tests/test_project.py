@@ -1,7 +1,7 @@
 import pytest
 import yaml
 from click.testing import CliRunner
-from schema import SchemaMissingKeyError, SchemaUnexpectedTypeError
+from schema import SchemaMissingKeyError, SchemaUnexpectedTypeError, SchemaError
 
 from flag_slurper.cli import cli
 from flag_slurper.project import project_schema, detect_version, project_schema_v1_0, Project
@@ -98,6 +98,69 @@ class TestProjectValidation:
     def test_schema_empty_document(self, make_project):
         with pytest.raises(SchemaUnexpectedTypeError, match="None should be instance of 'dict'"):
             project_schema.validate(make_project(""))
+
+    def test_schema_with_flags_empty(self, make_project):
+        p = project_schema.validate(make_project("""
+        ---
+        _version: "1.0"
+        project: ISU2-18
+        base: ~/cdcs/isu2-2018
+        flags: []
+        """))
+        assert 'flags' in p
+        assert p['flags'] == []
+
+    def test_schema_with_flags_populated(self, make_project):
+        p = project_schema.validate(make_project("""
+        ---
+        _version: "1.0"
+        project: ISU2-18
+        base: ~/cdcs/isu2-2018
+        flags:
+          - service: Web HTTP
+            type: blue
+            location: /root
+            name: team{num}_www_root.flag
+            search: yes
+        """))
+        assert p['flags'] == [{
+            'service': 'Web HTTP',
+            'type': 'blue',
+            'location': '/root',
+            'name': 'team{num}_www_root.flag',
+            'search': True,
+        }]
+
+    def test_schema_with_invalid_flags(self, make_project):
+        with pytest.raises(SchemaError, match="Missing keys"):
+            project_schema.validate(make_project("""
+            ---
+            _version: "1.0"
+            project: ISU2-18
+            base: ~/cdcs/isu2-2018
+            flags:
+             - {}
+            """))
+
+    def test_schema_with_multiple_flags(self, make_project):
+        p = project_schema.validate(make_project("""
+        ---
+        _version: "1.0"
+        project: ISU2-18
+        base: ~/cdcs/isu2-2018
+        flags:
+          - service: Web SSH
+            type: blue
+            location: /root
+            name: team{num}_www_root.flag'
+            search: yes
+          - service: Shell SSH
+            type: blue
+            location: /root
+            name: team{num}_shell_root.flag
+            search: no
+        """))
+        assert len(p['flags']) == 2
 
 
 def test_project_detect_schema(make_project):
