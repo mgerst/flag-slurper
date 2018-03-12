@@ -17,18 +17,14 @@ pass_conf = click.make_pass_decorator(Config)
 @click.option('--iscore-url', envvar='ISCORE_URL', default=None)
 @click.option('--api-token', envvar='ISCORE_API_TOKEN', default=None)
 @click.option('-p', '--project', envvar='SLURPER_PROJECT', type=click.Path(), default=None)
-@click.option('-v', '--version', default=False, is_flag=True)
+@click.version_option(version=__version__, prog_name='flag-slurper')
 @click.pass_context
-def cli(ctx, config, iscore_url, api_token, project, version):
+def cli(ctx, config, iscore_url, api_token, project):
     ctx.obj = Config.load(config)
     ctx.obj.cond_set('iscore', 'url', iscore_url)
     ctx.obj.cond_set('iscore', 'api_token', api_token)
 
-    if version or ctx.invoked_subcommand is None:
-        click.echo('Flag Slurper v{}'.format(__version__))
     if ctx.invoked_subcommand is None:
-        click.echo('\nSubcommand required.\n')
-
         click.echo(ctx.get_help())
         return
 
