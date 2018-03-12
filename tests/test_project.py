@@ -16,94 +16,88 @@ def project_manage():
     Project.instance = None
 
 
-def test_project_schema_valid(make_project):
-    result = project_schema.validate(make_project("""
-    ---
-    _version: "1.0"
-    project: ISU2-18
-    base: ~/cdcs/isu2-2018
-    results: results.yml
-    teams: teams.yml
-    services: services.yml
-    """))
-
-    assert result
-    assert isinstance(result, dict)
-    assert result['_version'] == "1.0"
-
-
-def test_project_schema_without_version(make_project):
-    with pytest.raises(SchemaMissingKeyError, match="Missing keys: '_version'"):
-        project_schema.validate(make_project("""
+class TestProjectValidation:
+    def test_schema_valid(self, make_project):
+        result = project_schema.validate(make_project("""
         ---
-        project: test
-        base: ~/test
+        _version: "1.0"
+        project: ISU2-18
+        base: ~/cdcs/isu2-2018
         results: results.yml
         teams: teams.yml
         services: services.yml
         """))
 
+        assert result
+        assert isinstance(result, dict)
+        assert result['_version'] == "1.0"
 
-def test_project_schema_missing_project(make_project):
-    with pytest.raises(SchemaMissingKeyError, match="Missing keys: 'project'"):
+    def test_schema_without_version(self, make_project):
+        with pytest.raises(SchemaMissingKeyError, match="Missing keys: '_version'"):
+            project_schema.validate(make_project("""
+            ---
+            project: test
+            base: ~/test
+            results: results.yml
+            teams: teams.yml
+            services: services.yml
+            """))
+
+    def test_schema_missing_project(self, make_project):
+        with pytest.raises(SchemaMissingKeyError, match="Missing keys: 'project'"):
+            project_schema.validate(make_project("""
+            ---
+            _version: "1.0"
+            base: ~/test
+            results: results.yml
+            teams: teams.yml
+            services: services.yml
+            """))
+
+    def test_schema_missing_base(self, make_project):
+        with pytest.raises(SchemaMissingKeyError, match="Missing keys: 'base'"):
+            project_schema.validate(make_project("""
+            ---
+            _version: "1.0"
+            project: test
+            results: results.yml
+            teams: teams.yml
+            services: services.yml
+            """))
+
+    def test_project_schema_missing_results(self, make_project):
         project_schema.validate(make_project("""
         ---
         _version: "1.0"
-        base: ~/test
-        results: results.yml
+        project: ISU2-18
+        base: ~/cdcs/isu2-2018
         teams: teams.yml
         services: services.yml
         """))
 
-
-def test_project_schema_missing_base(make_project):
-    with pytest.raises(SchemaMissingKeyError, match="Missing keys: 'base'"):
+    def test_schema_missing_teams(self, make_project):
         project_schema.validate(make_project("""
         ---
         _version: "1.0"
-        project: test
+        project: ISU2-18
+        base: ~/cdcs/isu2-2018
         results: results.yml
-        teams: teams.yml
         services: services.yml
         """))
 
+    def test_schema_missing_services(self, make_project):
+        project_schema.validate(make_project("""
+        ---
+        _version: "1.0"
+        project: ISU2-18
+        base: ~/cdcs/isu2-2018
+        results: results.yml
+        teams: teams.yml
+        """))
 
-def test_project_schema_missing_results(make_project):
-    project_schema.validate(make_project("""
-    ---
-    _version: "1.0"
-    project: ISU2-18
-    base: ~/cdcs/isu2-2018
-    teams: teams.yml
-    services: services.yml
-    """))
-
-
-def test_project_schema_missing_teams(make_project):
-    project_schema.validate(make_project("""
-    ---
-    _version: "1.0"
-    project: ISU2-18
-    base: ~/cdcs/isu2-2018
-    results: results.yml
-    services: services.yml
-    """))
-
-
-def test_project_schema_missing_services(make_project):
-    project_schema.validate(make_project("""
-    ---
-    _version: "1.0"
-    project: ISU2-18
-    base: ~/cdcs/isu2-2018
-    results: results.yml
-    teams: teams.yml
-    """))
-
-
-def test_project_schema_empty_document(make_project):
-    with pytest.raises(SchemaUnexpectedTypeError, match="None should be instance of 'dict'"):
-        project_schema.validate(make_project(""))
+    def test_schema_empty_document(self, make_project):
+        with pytest.raises(SchemaUnexpectedTypeError, match="None should be instance of 'dict'"):
+            project_schema.validate(make_project(""))
 
 
 def test_project_detect_schema(make_project):
