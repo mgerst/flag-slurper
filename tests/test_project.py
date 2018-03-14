@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 import yaml
 from click.testing import CliRunner
@@ -14,6 +16,18 @@ def project_manage():
     """
     yield
     Project.instance = None
+
+
+@pytest.fixture
+def basic_project(create_project):
+    tmpdir = create_project("""
+    _version: "1.0"
+    project: ISU2-18
+    base: {dir}/isu2-18
+    """)
+    p = Project.get_instance()
+    p.load(str(tmpdir.join('project.yml')))
+    return p
 
 
 class TestProjectValidation:
@@ -120,14 +134,14 @@ class TestProjectValidation:
           - service: Web HTTP
             type: blue
             location: /root
-            name: team{num}_www_root.flag
+            name: team{{ num }}_www_root.flag
             search: yes
         """))
         assert p['flags'] == [{
             'service': 'Web HTTP',
             'type': 'blue',
             'location': '/root',
-            'name': 'team{num}_www_root.flag',
+            'name': 'team{{ num }}_www_root.flag',
             'search': True,
         }]
 
@@ -152,12 +166,12 @@ class TestProjectValidation:
           - service: Web SSH
             type: blue
             location: /root
-            name: team{num}_www_root.flag'
+            name: team{{ num }}_www_root.flag'
             search: yes
           - service: Shell SSH
             type: blue
             location: /root
-            name: team{num}_shell_root.flag
+            name: team{{ num }}_shell_root.flag
             search: no
         """))
         assert len(p['flags']) == 2
@@ -212,6 +226,19 @@ def test_load_project(create_project):
     assert project.project_data is not None
 
 
+def test_load_project_directory(create_project):
+    tmpdir = create_project("""
+    ---
+    _version: "1.0"
+    project: ISU2-18
+    base: {dir}/isu2-18
+    """)
+
+    project = Project.get_instance()
+    project.load(str(tmpdir))
+    assert project.project_data is not None
+
+
 def test_project_disabled():
     p = Project.get_instance()
     assert not p.enabled
@@ -228,18 +255,6 @@ def test_project_enabled(create_project):
     p = Project.get_instance()
     p.load(str(tmpdir.join('project.yml')))
     assert p.enabled
-
-
-@pytest.fixture
-def basic_project(create_project):
-    tmpdir = create_project("""
-    _version: "1.0"
-    project: ISU2-18
-    base: {dir}/isu2-18
-    """)
-    p = Project.get_instance()
-    p.load(str(tmpdir.join('project.yml')))
-    return p
 
 
 def test_project_default_empty(basic_project):
@@ -296,6 +311,79 @@ def test_project_create_base(create_project):
     assert str(base) == str(tmpdir.join('isu2-18'))
 
 
+def test_project_flags(create_project):
+    tmpdir = create_project("""
+    _version: "1.0"
+    project: ISU2-18
+    base: {dir}/isu2-18
+    flags:
+      - service: Web HTTP
+        type: blue
+        location: /root
+        name: team{{{{ num }}}}_www_root.flag
+        search: yes
+    """)
+    p = Project.get_instance()
+    p.load(str(tmpdir.join('project.yml')))
+
+    assert p.flags == [
+        {
+            'service': 'Web HTTP',
+            'type': 'blue',
+            'location': '/root',
+            'name': 'team{{ num }}_www_root.flag',
+            'search': True,
+        }
+    ]
+
+
+def test_project_flag_single(create_project):
+    tmpdir = create_project("""
+    _version: "1.0"
+    project: ISU2-18
+    base: {dir}/isu2-18
+    flags:
+      - service: Web HTTP
+        type: blue
+        location: /root
+        name: team{{{{ num }}}}_www_root.flag
+        search: yes
+    """)
+    p = Project.get_instance()
+    p.load(str(tmpdir.join('project.yml')))
+
+    flags = p.flag(1)
+    assert flags == [
+        {
+            'service': 'Web HTTP',
+            'type': 'blue',
+            'location': '/root',
+            'name': 'team1_www_root.flag',
+            'search': True,
+        }
+    ]
+
+
+def test_project_flags_disabled():
+    p = Project.get_instance()
+    assert not p.enabled
+    assert p.flags == []
+
+
+def test_project_flag_disabled():
+    p = Project.get_instance()
+    assert not p.enabled
+    assert p.flag(1) == []
+
+
+def test_project_without_flags(basic_project):
+    assert basic_project.flags == []
+
+
+def test_project_without_flag(basic_project):
+    assert basic_project.flag(1) == []
+
+
 class TestCli:
     def test_project_init(self, tmpdir):
         runner = CliRunner()
@@ -328,7 +416,9 @@ class TestCli:
 
     def test_project_create_with_options(self, tmpdir):
         runner = CliRunner()
-        result = runner.invoke(cli, ['project', 'init', '-n', 'test', '-b', str(tmpdir), '-t', 't.yml', '-s', 's.yml', '-r', 'r.yml'])
+        result = runner.invoke(cli,
+                               ['project', 'init', '-n', 'test', '-b', str(tmpdir), '-t', 't.yml', '-s', 's.yml', '-r',
+                                'r.yml'])
         assert result.exit_code == 0
 
         expected = {

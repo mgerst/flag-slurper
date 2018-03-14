@@ -10,7 +10,6 @@ class Credential:
 
     def mark_works(self, service):
         self.works.append(service)
-        print(self.works)
 
     def mark_rejected(self, service):
         self.rejected.append(service)

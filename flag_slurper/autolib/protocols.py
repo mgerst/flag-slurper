@@ -3,7 +3,7 @@ from typing import Tuple
 import paramiko
 
 from .credentials import credential_bag, flag_bag
-from .exploit import find_flags
+from .exploit import find_flags, FlagConf
 
 
 def _get_ssh_client():
@@ -12,14 +12,14 @@ def _get_ssh_client():
     return ssh
 
 
-def pwn_ssh(url: str, port: int, service) -> Tuple[str, bool, bool]:
+def pwn_ssh(url: str, port: int, service, flag_conf: FlagConf) -> Tuple[str, bool, bool]:
     ssh = _get_ssh_client()
 
     working = set()
     for credential in credential_bag.credentials():
         try:
             with ssh:
-                ssh.connect(url, port=port, username=credential.username, password=credential)
+                ssh.connect(url, port=port, username=credential.username, password=credential.password, look_for_keys=False)
                 credential.mark_works(service)
                 working.add(credential)
 

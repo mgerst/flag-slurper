@@ -1,4 +1,5 @@
 import click
+import pathlib
 
 from . import __version__
 from . import utils
@@ -29,8 +30,12 @@ def cli(ctx, config, iscore_url, api_token, project):
         return
 
     if project:
+        project = pathlib.Path(project)
+        project = project.expanduser()
+        if project.is_dir():
+            project = project / 'project.yml'
         p = Project.get_instance()
-        p.load(project)
+        p.load(str(project))
 
 
 @cli.command()
