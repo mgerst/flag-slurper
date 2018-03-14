@@ -105,3 +105,4 @@ teams.yml
 services.yml
 results.yml
 project.yml
+.vagrant/
