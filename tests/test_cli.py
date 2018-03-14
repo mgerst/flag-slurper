@@ -23,14 +23,10 @@ def test_cli_bare_usage():
 
 
 def test_cli_version():
-    @cli.command()
-    def cmd():
-        pass
-
     runner = CliRunner()
-    result = runner.invoke(cli, ['-v', 'cmd'])
+    result = runner.invoke(cli, ['--version'])
     assert result.exit_code == 0
-    assert result.output == "Flag Slurper v0.2\n"
+    assert result.output == "flag-slurper, version 0.2\n"
 
 
 def test_cli_pass_config():

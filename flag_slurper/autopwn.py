@@ -1,7 +1,7 @@
+import pathlib
 from collections import defaultdict
 
 import click
-import pathlib
 import yaml
 
 from . import utils, autolib
@@ -21,15 +21,24 @@ def autopwn():
 
 
 @autopwn.command()
-@click.option('-s', '--service-list', type=click.File('r'), default=Project.default('services', 'services.yml'))
-@click.option('-t', '--team-list', type=click.File('r'), default=Project.default('teams', 'teams.yml'))
-@click.option('-r', '--results', type=click.File('w'), default=Project.default('results', 'results.yml'))
+@click.option('-s', '--service-list', type=click.Path(), default=Project.default('services', 'services.yml'))
+@click.option('-t', '--team-list', type=click.Path(), default=Project.default('teams', 'teams.yml'))
+@click.option('-r', '--results', type=click.Path(), default=Project.default('results', 'results.yml'))
 @click.option('-v', '--verbose', type=click.BOOL, default=False)
 def pwn(service_list, team_list, results, verbose):
     utils.report_status("Starting AutoPWN")
-    teams = yaml.load(team_list)
-    team_map = utils.get_team_map(teams)
-    services = yaml.load(service_list)
+    p = Project.get_instance()
+
+    if p.enabled:
+        utils.report_status("Loaded project from {}".format(p.base))
+        service_list = p.base / service_list
+        team_list = p.base / team_list
+        results = p.base / results
+
+    with open(str(team_list), 'r') as team_list, open(str(service_list), 'r') as service_list:
+        teams = yaml.load(team_list)
+        team_map = utils.get_team_map(teams)
+        services = yaml.load(service_list)
 
     def team_name(number):
         return team_map[number]['name']
@@ -37,9 +46,12 @@ def pwn(service_list, team_list, results, verbose):
     pwn_results = {'scan_results': []}
     for team, services in services.items():
         utils.report_status("Checking team: {} ({})".format(team, team_name(team)))
+        flags = p.flag(team)
         for service in services:
             service = autolib.coerce_service(service)
-            result = autolib.pwn_service(service)
+            flag = list(filter(lambda x: x['service'] == service.service_name, flags))
+            flag = flag[0] if len(flag) == 1 else []
+            result = autolib.pwn_service(service, flag)
             pwn_results['scan_results'].append(result)
             if result.success:
                 utils.report_success(result)
@@ -61,8 +73,9 @@ def pwn(service_list, team_list, results, verbose):
         else:
             utils.report_warning("Credential {} works on no teams".format(cred))
 
-    pwn_results['flags'] = autolib.flag_bag.flags
-    yaml.dump(pwn_results, results, default_flow_style=False)
+    with open(str(results), 'w') as results:
+        pwn_results['flags'] = autolib.flag_bag.flags
+        yaml.dump(pwn_results, results, default_flow_style=False)
 
 
 @autopwn.command()
@@ -99,9 +112,16 @@ def generate(service_list, team_list):
 
 
 @autopwn.command()
-@click.option('-r', '--results', type=click.File('r'), default=Project.default('results', 'results.yml'))
+@click.option('-r', '--results', type=click.Path(), default=Project.default('results', 'results.yml'))
 def results(results):
-    pwn_results = yaml.load(results)
+    p = Project.get_instance()
+    results = pathlib.Path(results)
+    if p.enabled:
+        results = p.base / results
+    utils.report_status("Loading results from {}".format(results))
+
+    with open(str(results), 'r') as results:
+        pwn_results = yaml.load(results)
 
     if len(pwn_results['flags']) == 0:
         utils.report_warning('No Flags Found')
@@ -110,8 +130,8 @@ def results(results):
 
         for flag in pwn_results['flags']:
             utils.report_success(
-                "{}/{}: Has flag at {} with contents {}".format(flag.service.team_number, flag.service.service_name,
-                                                                flag.contents[0], flag.contents[1]))
+                "{}/{}: {} -> {}".format(flag.service.team_number, flag.service.service_name,
+                                         flag.contents[0], flag.contents[1]))
 
     click.echo()
     utils.report_status("Found the following credentials")

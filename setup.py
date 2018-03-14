@@ -15,6 +15,7 @@ tests_require = [
     'pytest-sugar',
     'tox',
     'vcrpy',
+    'pretend',
 ]
 
 
@@ -36,6 +37,7 @@ setup(
         'click',
         'pyyaml',
         'schema',
+        'jinja2',
     ],
     tests_require=tests_require,
     extras_require={

@@ -1,12 +1,16 @@
+import subprocess
 import typing as tp
 from pathlib import Path
 
 import click
 import yaml
+from copy import deepcopy
+from jinja2 import Environment
 from schema import Schema, Use, Optional
 from yaml import safe_load
 
 from . import utils
+
 
 project_schema_v1_0 = Schema({
     '_version': Use(str, error='Must include _version'),
@@ -15,6 +19,15 @@ project_schema_v1_0 = Schema({
     Optional('results'): Use(Path, error='results must be a path'),
     Optional('teams'): Use(Path, error='teams must be a path'),
     Optional('services'): Use(Path, error='services must be a path'),
+    Optional('flags'): Schema([
+        {
+            'service': str,
+            'type': lambda x: x in ['blue', 'red'],
+            'location': str,
+            'name': str,
+            'search': bool,
+        }
+    ]),
 })
 
 project_schema = project_schema_v1_0
@@ -41,14 +54,22 @@ Transform = tp.Callable[[tp.Any], tp.Any]
 
 
 class Project:
+    FlagList = tp.List[tp.Dict[str, tp.Any]]
     instance = None
 
     def __init__(self):
         self.project_data = None
 
-    def load(self, project_file: str):
-        print("loading project")
-        with open(project_file, 'r') as fp:
+    def load(self, project_file: tp.Union[str, Path]):
+        if not isinstance(project_file, Path):
+            project_file = Path(project_file)
+
+        if project_file.is_dir():
+            project_file = project_file / 'project.yml'
+
+        project_file = project_file.resolve()
+
+        with open(str(project_file), 'r') as fp:
             yaml = safe_load(fp)
             schema = detect_version(yaml)
             self.project_data = schema.validate(yaml)
@@ -98,6 +119,9 @@ class Project:
     def enabled(self):
         return self.project_data is not None
 
+    def template_environment(self) -> Environment:
+        return Environment()
+
     @property
     def base(self) -> Path:
         base = self.project_data['base']  #: Path
@@ -106,6 +130,26 @@ class Project:
         if not base.exists():
             base.mkdir(parents=True, exist_ok=True)
         return base
+
+    @property
+    def flags(self) -> FlagList:
+        if not self.enabled or 'flags' not in self.project_data:
+            return []
+        return self.project_data['flags']
+
+    def flag(self, team: int) -> FlagList:
+        if not self.enabled or 'flags' not in self.project_data:
+            return []
+
+        env = self.template_environment()
+        flags = []
+
+        for item in self.project_data['flags']:
+            flag = deepcopy(item)
+            tmpl = env.from_string(flag['name'])
+            flag['name'] = tmpl.render(num=team)
+            flags.append(flag)
+        return flags
 
 
 @click.group()

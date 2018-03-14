@@ -1,0 +1,57 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+    - name: Setting up proxy
+      template: src=02proxy.j2 dest=/etc/apt/apt.conf.d/02proxy
+      when: apt_cache_enabled
+
+    - name: Install apt packages
+      apt: name={{ item }} state=present update_cache=yes cache_valid_time=86000
+      with_items:
+        - vim
+        - htop
+        - openssh-server
+
+    - name: "Setup default creds: cdc:cdc"
+      user:
+        name: cdc
+        password: "$1$kejaef$s8Y0EuYOIiDSSiItk8zLv1"
+        shell: /bin/bash
+        groups:
+          - cdrom
+          - floppy
+          - sudo
+          - audio
+          - dip
+          - video
+          - plugdev
+          - netdev
+
+    - name: Change root password
+      user: name=root password="$1$kejaef$s8Y0EuYOIiDSSiItk8zLv1"
+
+    - name: Allow password ssh loging
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PasswordAuthentication'
+        line: 'PasswordAuthentication yes'
+      notify: restart ssh
+
+    - name: Allow root ssh
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin yes'
+      notify: restart ssh
+
+    - name: Create flag for {{ inventory_hostname }}
+      copy:
+        dest: /root/{{ inventory_hostname }}_www_root.flag
+        content: "{{ lookup('password', 'flags/' + inventory_hostname + '_www_root.flag length=50') }}"
+        owner: root
+        group: root
+
+  handlers:
+    - name: restart ssh
+      service: name=ssh state=restarted
