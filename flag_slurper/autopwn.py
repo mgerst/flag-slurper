@@ -1,7 +1,7 @@
+import pathlib
 from collections import defaultdict
 
 import click
-import pathlib
 import yaml
 
 from . import utils, autolib
@@ -130,8 +130,8 @@ def results(results):
 
         for flag in pwn_results['flags']:
             utils.report_success(
-                "{}/{}: Has flag at {} with contents {}".format(flag.service.team_number, flag.service.service_name,
-                                                                flag.contents[0], flag.contents[1]))
+                "{}/{}: {} -> {}".format(flag.service.team_number, flag.service.service_name,
+                                         flag.contents[0], flag.contents[1]))
 
     click.echo()
     utils.report_status("Found the following credentials")
