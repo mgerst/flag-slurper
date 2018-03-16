@@ -89,6 +89,22 @@ def test_save_flags(tmpdir):
     assert contents.decode('utf-8') == 'TESTDATA\n'
 
 
+def test_save_flags_all_teams(tmpdir):
+    flags = {
+        1: {'filename': 'team_1_www_etc.flag', 'data': 'TEST1'},
+        2: {'filename': 'team_2_www_etc.flag', 'data': 'TEST2'},
+    }
+    utils.save_flags(flags, base_path=str(tmpdir))
+    flag_zip = tmpdir.join("all_team_flags.zip")
+    assert flag_zip.check()
+
+    z = zipfile.ZipFile(str(flag_zip))
+    contents = z.read('team_1_www_etc.flag')
+    assert contents.decode('utf-8') == 'TEST1\n'
+    contents = z.read('team_2_www_etc.flag')
+    assert contents.decode('utf-8') == 'TEST2\n'
+
+
 USER_ADMIN = {
     'first_name': 'Test',
     'last_name': 'Admin',
