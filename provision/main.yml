@@ -29,7 +29,7 @@
           - netdev
 
     - name: Change root password
-      user: name=root password="$1$kejaef$s8Y0EuYOIiDSSiItk8zLv1"
+      user: name=root password="{{ root_password }}"
 
     - name: Allow password ssh loging
       lineinfile:

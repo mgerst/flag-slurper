@@ -1,5 +1,7 @@
+import itertools
 import pathlib
 from collections import defaultdict
+from multiprocessing import Pool
 
 import click
 import yaml
