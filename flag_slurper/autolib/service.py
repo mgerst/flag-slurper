@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, Optional
 
 from .exploit import FlagConf
 from .protocols import PWN_FUNCS
@@ -24,6 +24,12 @@ class Result:
         self.skipped = skipped
         self.proto, self.url, self.port = detect_service(service)
 
+    def __eq__(self, other):
+        return self.service == other.service \
+               and self.message == other.message \
+               and self.success == other.success \
+               and self.skipped == other.skipped
+
     def __str__(self):
         header = "{team}/{url}:{port}/{proto}".format(team=self.service.team_number, url=self.url, port=self.port,
                                                       proto=self.proto)
@@ -33,6 +39,9 @@ class Result:
             return "{} Skipped pwn: {}".format(header, self.message)
         elif self.success:
             return "{} Succeeded!  {}".format(header, self.message)
+
+    def __repr__(self):  # pragma: no cover
+        return '<Result "{}">'.format(self.__str__())
 
 
 def coerce_service(service: Dict[str, Any]) -> Service:
@@ -45,7 +54,7 @@ def detect_service(service: Service) -> Tuple[str, int, str]:
     return SERVICE_MAP[service.service_port], service.service_url, service.service_port
 
 
-def pwn_service(service: Service, flag_conf: FlagConf) -> Result:
+def pwn_service(service: Service, flag_conf: Optional[FlagConf]) -> Result:
     proto, url, port = detect_service(service)
     if proto not in PWN_FUNCS:
         return Result(service=service, message="Protocol not supported for autopwn", success=False, skipped=True)

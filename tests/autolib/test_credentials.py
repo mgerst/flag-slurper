@@ -1,12 +1,6 @@
 import pytest
 
-from flag_slurper.autolib import Service
 from flag_slurper.autolib.credentials import Credential, CredentialBag, FlagBag
-
-
-@pytest.fixture
-def service():
-    return Service(1, 1, 'HTTP', 80, 'www.team1.isucdc.com', 1, 'Test Team', 1, 'UP', 0, 0, False)
 
 
 @pytest.fixture
