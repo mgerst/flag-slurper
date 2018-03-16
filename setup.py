@@ -16,6 +16,7 @@ tests_require = [
     'pytest-mock',
     'tox',
     'vcrpy',
+    'responses',
     'pretend',
 ]
 

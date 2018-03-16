@@ -81,5 +81,5 @@ try:
     from .autopwn import autopwn
     cli.add_command(remote)
     cli.add_command(autopwn)
-except ImportError:
+except ImportError:  # pragma: no cover
     pass

@@ -1,0 +1,3 @@
+[run]
+omit =
+  flag_slurper/__main__.py

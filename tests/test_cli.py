@@ -1,11 +1,20 @@
-from unittest import mock
-
 import pytest
+import responses
 from click.testing import CliRunner
 
 from flag_slurper.cli import cli, pass_conf
 from flag_slurper.config import Config
 from flag_slurper.project import Project
+
+from . import response_mocks as rm
+
+
+@pytest.fixture
+def dummy_cmd():
+    @cli.command()
+    def cmd():
+        pass
+    return cmd
 
 
 def test_cli_usage():
@@ -39,20 +48,61 @@ def test_cli_pass_config():
     runner.invoke(cli, ['cmd'])
 
 
-def test_plant_invalid_user():
+def test_plant_invalid_user(mocker):
+    prompt = mocker.patch('flag_slurper.config.prompt')
+    prompt.return_value = "ABC"
     runner = CliRunner()
     result = runner.invoke(cli, ['plant'])
     assert result.exit_code == 1
 
 
-@pytest.mark.skip('Mocks not working')
-@mock.patch('flag_slurper.utils.check_user')
-def test_plant(check_user):
-    check_user.return_value = None
+@responses.activate
+def test_plant(mocker):
+    prompt = mocker.patch('flag_slurper.config.prompt')
+    prompt.side_effect = ['ABC', '']
+    click = mocker.patch('flag_slurper.cli.click.prompt')
+    click.return_value = 0
+    responses.add(responses.GET, 'https://iscore.iseage.org/api/v1/user/show.json', status=200, json=rm.RED_USER)
+    responses.add(responses.GET, 'https://iscore.iseage.org/api/v1/flags.json', status=200, json=rm.RED_FLAGS)
+
     runner = CliRunner()
     result = runner.invoke(cli, ['plant'])
-    assert check_user.called
+    print(result.output)
     assert result.exit_code == 0
+    expected_flag = 'Flag: {}'.format(rm.RED_FLAGS[0]['data'])
+    assert expected_flag in result.output
+
+
+@responses.activate
+def test_plant_invalid(mocker):
+    prompt = mocker.patch('flag_slurper.config.prompt')
+    prompt.side_effect = ['ABC', '']
+    click = mocker.patch('flag_slurper.cli.click.prompt')
+    click.return_value = 101
+    responses.add(responses.GET, 'https://iscore.iseage.org/api/v1/user/show.json', status=200, json=rm.RED_USER)
+    responses.add(responses.GET, 'https://iscore.iseage.org/api/v1/flags.json', status=200, json=rm.RED_FLAGS)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ['plant'])
+    assert result.exit_code == 1
+    assert 'Invalid selection' in result.output
+
+
+@responses.activate
+def test_plant_as_admin(mocker):
+    # TODO: We might be able to move this boilerplate into a fixture
+    prompt = mocker.patch('flag_slurper.config.prompt')
+    prompt.side_effect = ['ABC', '']
+    click = mocker.patch('flag_slurper.cli.click.prompt')
+    click.return_value = 0
+    responses.add(responses.GET, 'https://iscore.iseage.org/api/v1/user/show.json', status=200, json=rm.ADMIN_USER)
+    responses.add(responses.GET, 'https://iscore.iseage.org/api/v1/flags.json', status=200, json=rm.ADMIN_FLAGS)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ['plant'])
+    assert result.exit_code == 0
+    assert "0. WWW /etc (red)\n1. WWW /root (blue)" in result.output
+    assert "Flag: ABCDE" in result.output
 
 
 def test_cli_load_project(create_project):
@@ -71,3 +121,10 @@ def test_cli_load_project(create_project):
     result = runner.invoke(cli, ['--project', str(tmpdir.join('project.yml')), 'cmd'])
 
     assert result.exit_code == 0
+
+
+def test_cli_load_project_append_file(mocker, dummy_cmd, tmpdir):
+    project = mocker.patch('flag_slurper.cli.Project')
+    runner = CliRunner()
+    runner.invoke(cli, ['-p', str(tmpdir), 'cmd'])
+    assert project.load.called_with(str(tmpdir.join('project.yml')))
