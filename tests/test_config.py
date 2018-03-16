@@ -63,11 +63,22 @@ def test_config_user(config):
         assert result == user
 
 
-@pytest.mark.skip("Can't mock input")
-def test_config_prompt_token(config, capsys):
-    with mock.patch.object(__builtins__, 'input') as input:
-        input.return_value = "API_TOKEN"
-        config.prompt_creds()
-        captured = capsys.readouterr()
-        assert captured.out == "Enter your IScorE API Token (leave blank to use your credentials)\n"
-        assert config['iscore']['api_token'] == 'API_TOKEN'
+def test_config_prompt_token(config, capsys, mocker):
+    mock = mocker.patch('flag_slurper.config.prompt')
+    mock.return_value = "API_TOKEN"
+    config.prompt_creds()
+    captured = capsys.readouterr()
+    print(captured.out)
+    assert captured.out == "Enter your IScorE API Token (leave blank to use your credentials)\n"
+    assert config['iscore']['api_token'] == 'API_TOKEN'
+
+
+def test_config_prompt_creds(config, capsys, mocker):
+    # API token, username, password
+    prompt = mocker.patch('flag_slurper.config.prompt')
+    prompt.side_effect = ['', 'test', 'pass']
+    config.prompt_creds()
+    captured = capsys.readouterr()
+    assert captured.out == "Enter your IScorE API Token (leave blank to use your credentials)\nPlease login using your IScorE credentials\n"
+    assert hasattr(config, 'credentials')
+    assert config.credentials == ('test', 'pass')

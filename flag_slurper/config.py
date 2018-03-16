@@ -1,7 +1,8 @@
-import getpass
 from configparser import ConfigParser
 from pathlib import Path
 from typing import Optional
+
+from click import echo, prompt
 
 ROOT = Path(__file__).parent
 
@@ -53,13 +54,14 @@ class Config(ConfigParser):
 
     def prompt_creds(self):
         if 'api_token' not in self['iscore'] or not self['iscore']['api_token']:
-            print('Enter your IScorE API Token (leave blank to use your credentials)')
-            self['iscore']['api_token'] = input('> ')
+            echo('Enter your IScorE API Token (leave blank to use your credentials)')
+            token = prompt('', hide_input=True, prompt_suffix='> ', type=str, default='', show_default=False)
+            self['iscore']['api_token'] = token
 
         if not self['iscore']['api_token'] and not hasattr(self, 'credentials'):
-            print('Please login using your IScorE credentials')
-            username = input('Username: ')
-            password = getpass.getpass()
+            echo('Please login using your IScorE credentials')
+            username = prompt("Username", type=str)
+            password = prompt("Password", type=str, hide_input=True)
             self.credentials = (username, password)
 
     def request_extras(self):

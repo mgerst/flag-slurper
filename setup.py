@@ -13,6 +13,7 @@ def read(fname):
 tests_require = [
     'pytest',
     'pytest-sugar',
+    'pytest-mock',
     'tox',
     'vcrpy',
     'pretend',
