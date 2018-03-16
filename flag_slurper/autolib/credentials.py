@@ -29,7 +29,7 @@ class Credential:
     def __str__(self):
         return "{}:{}".format(self.username, self.password)
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return "<Credential {}>".format(self.__str__())
 
 
@@ -41,7 +41,10 @@ class CredentialBag():
         }
 
     def add_credential(self, cred: Credential):
-        self.creds[cred.username].add(cred)
+        username = cred.username
+        if username not in self.creds:
+            self.creds[username] = set()
+        self.creds[username].add(cred)
 
     def credentials(self):
         for creds in self.creds.values():
