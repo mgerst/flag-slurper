@@ -31,7 +31,7 @@ class Result:
                and self.skipped == other.skipped
 
     def __str__(self):
-        header = "{team}/{url}:{port}/{proto}".format(team=self.service.team_number, url=self.url, port=self.port,
+        header = "{team}/{url}:{port}/{proto}".format(team=self.service.team.number, url=self.url, port=self.port,
                                                       proto=self.proto)
         if not self.success and not self.skipped:
             return "{} Failed pwn: {}".format(header, self.message)

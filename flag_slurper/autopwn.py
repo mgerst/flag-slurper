@@ -22,52 +22,45 @@ def autopwn():
 
 
 @autopwn.command()
-@click.option('-s', '--service-list', type=click.Path(), default=Project.default('services', 'services.yml'))
-@click.option('-t', '--team-list', type=click.Path(), default=Project.default('teams', 'teams.yml'))
 @click.option('-r', '--results', type=click.Path(), default=Project.default('results', 'results.yml'))
 @click.option('-v', '--verbose', type=click.BOOL, default=False)
-def pwn(service_list, team_list, results, verbose):
+def pwn(results, verbose):
     utils.report_status("Starting AutoPWN")
     p = Project.get_instance()
 
-    if p.enabled:
-        utils.report_status("Loaded project from {}".format(p.base))
-        service_list = p.base / service_list
-        team_list = p.base / team_list
-        results = p.base / results
+    if not p.enabled:
+        utils.report_error("AutoPwn requires a project be active")
+        return 1
 
-    with open(str(team_list), 'r') as team_list, open(str(service_list), 'r') as service_list:
-        teams = yaml.load(team_list)
-        team_map = utils.get_team_map(teams)
-        services = yaml.load(service_list)
+    p.connect_database()
+    utils.report_status("Loaded project from {}".format(p.base))
+    results = p.base / results
 
-    def team_name(number):
-        return team_map[number]['name']
+    services = models.Service.select()
 
     pwn_results = {'scan_results': []}
-    for team, services in services.items():
-        utils.report_status("Checking team: {} ({})".format(team, team_name(team)))
+    for service in services:
+        team = service.team
+        utils.report_status("Checking team: {} ({})".format(team.number, team.name))
         flags = p.flag(team)
-        for service in services:
-            service = autolib.coerce_service(service)
-            flag = list(filter(lambda x: x['service'] == service.service_name, flags))
-            flag = flag[0] if len(flag) == 1 else []
-            result = autolib.pwn_service(service, flag)
-            pwn_results['scan_results'].append(result)
-            if result.success:
-                utils.report_success(result)
-            elif result.skipped:
-                if verbose:
-                    utils.report_warning(result)
-            else:
-                utils.report_error(result)
+        flag = list(filter(lambda x: x['service'] == service.service_name, flags))
+        flag = flag[0] if len(flag) == 1 else []
+        result = autolib.pwn_service(service, flag)
+        pwn_results['scan_results'].append(result)
+        if result.success:
+            utils.report_success(result)
+        elif result.skipped:
+            if verbose:
+                utils.report_warning(result)
+        else:
+            utils.report_error(result)
 
     pwn_results['creds'] = []
     for cred in autolib.credential_bag.credentials():
         pwn_results['creds'].append(cred)
         if len(cred.works):
             def display_service(service: autolib.Service):
-                return "{}/{}".format(service.team_number, service.service_name)
+                return "{}/{}".format(service.team.number, service.service_name)
 
             utils.report_success("Credential {} works on the following teams: \n\t- {}".format(cred, "\n\t- ".join(
                 map(display_service, cred.works))))
