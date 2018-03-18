@@ -119,7 +119,7 @@ def results(results):
 
         for flag in pwn_results['flags']:
             utils.report_success(
-                "{}/{}: {} -> {}".format(flag.service.team_number, flag.service.service_name,
+                "{}/{}: {} -> {}".format(flag.service.team.number, flag.service.service_name,
                                          flag.contents[0], flag.contents[1]))
 
     click.echo()

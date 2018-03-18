@@ -1,5 +1,7 @@
 from typing import Tuple
 
+from .models import Service
+
 
 class Credential:
     def __init__(self, username: str, password: str):
@@ -56,7 +58,7 @@ credential_bag = CredentialBag()
 
 
 class Flag:
-    def __init__(self, team: int, service: 'Service', contents: Tuple[str]):
+    def __init__(self, team: int, service: Service, contents: Tuple[str, str]):
         self.team = team
         self.service = service
         self.contents = contents
@@ -69,8 +71,8 @@ class FlagBag:
     def __init__(self):
         self.flags = []
 
-    def add_flag(self, service: 'Service', contents: Tuple[str, str]):
-        self.flags.append(Flag(service.team_number, service, contents))
+    def add_flag(self, service: Service, contents: Tuple[str, str]):
+        self.flags.append(Flag(service.team.number, service, contents))
 
 
 flag_bag = FlagBag()

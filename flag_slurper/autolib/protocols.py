@@ -6,6 +6,7 @@ import paramiko
 from flag_slurper.autolib.exploit import get_file_contents
 from .credentials import credential_bag, flag_bag
 from .exploit import find_flags, FlagConf
+from .models import Service
 
 
 def _get_ssh_client():
@@ -14,7 +15,7 @@ def _get_ssh_client():
     return ssh
 
 
-def pwn_ssh(url: str, port: int, service, flag_conf: FlagConf) -> Tuple[str, bool, bool]:
+def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf) -> Tuple[str, bool, bool]:
     ssh = _get_ssh_client()
     base_dir = flag_conf['location'] if flag_conf else None
     enable_search = flag_conf['search'] if flag_conf else True
@@ -32,6 +33,7 @@ def pwn_ssh(url: str, port: int, service, flag_conf: FlagConf) -> Tuple[str, boo
                     full_location = os.path.join(base_dir, location)
                     flag = get_file_contents(ssh, full_location)
                     if flag:
+                        print("Got flag")
                         enable_search = False
                         flag_bag.add_flag(service, (full_location, flag))
 

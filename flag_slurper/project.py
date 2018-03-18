@@ -138,7 +138,7 @@ class Project:
             return []
         return self.project_data['flags']
 
-    def flag(self, team: int) -> FlagList:
+    def flag(self, team: models.Team) -> FlagList:
         if not self.enabled or 'flags' not in self.project_data:
             return []
 
@@ -148,7 +148,7 @@ class Project:
         for item in self.project_data['flags']:
             flag = deepcopy(item)
             tmpl = env.from_string(flag['name'])
-            flag['name'] = tmpl.render(num=team)
+            flag['name'] = tmpl.render(num=team.number)
             flags.append(flag)
         return flags
 
