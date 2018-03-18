@@ -1,16 +1,16 @@
-import subprocess
 import typing as tp
+from copy import deepcopy
 from pathlib import Path
 
 import click
 import yaml
-from copy import deepcopy
 from jinja2 import Environment
 from schema import Schema, Use, Optional
 from yaml import safe_load
 
+from flag_slurper.config import Config
 from . import utils
-
+from .autolib import models
 
 project_schema_v1_0 = Schema({
     '_version': Use(str, error='Must include _version'),
@@ -75,7 +75,8 @@ class Project:
             self.project_data = schema.validate(yaml)
 
     @classmethod
-    def default(cls, key: str, default: tp.Optional[tp.Any] = None, transform: tp.Optional[Transform] = None) -> Callback:
+    def default(cls, key: str, default: tp.Optional[tp.Any] = None,
+                transform: tp.Optional[Transform] = None) -> Callback:
         """
         Generate a default method for a click argument.
 
@@ -151,6 +152,11 @@ class Project:
             flags.append(flag)
         return flags
 
+    def connect_database(self):
+        conf = Config.get_instance()
+        db_path = conf.database(str(self.base))
+        models.initialize(db_path)
+
 
 @click.group()
 def project():
@@ -195,3 +201,10 @@ def env(path):
     click.echo('export SLURPER_PROJECT={};'.format(path))
     click.echo('export unslurp() { unset SLURPER_PROJECT; unset -f unslurp; };')
     click.echo('echo "Set {} as current project. Run \'unslurp\' to unset";'.format(path))
+
+
+@project.command()
+def create_db():
+    p = Project.get_instance()
+    p.connect_database()
+    models.create()

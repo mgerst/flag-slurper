@@ -5,6 +5,7 @@ import click
 import yaml
 
 from . import utils, autolib
+from .autolib import models
 from .config import Config
 from .project import Project
 
@@ -79,36 +80,31 @@ def pwn(service_list, team_list, results, verbose):
 
 
 @autopwn.command()
-@click.option('-s', '--service-list', type=click.Path(), default=Project.default('services', 'services.yml'))
-@click.option('-t', '--team-list', type=click.Path(), default=Project.default('teams', 'teams.yml'))
-def generate(service_list, team_list):
-    service_list = pathlib.Path(service_list)
-    team_list = pathlib.Path(team_list)
-
+def generate():
     p = Project.get_instance()
-    if p.enabled:
-        service_list = p.base / service_list
-        team_list = p.base / team_list
+    p.connect_database()
+    if not p.enabled:
+        utils.report_error("Generate requires a project be active")
+        return 1
 
     teams = utils.get_teams()
 
-    with open(str(team_list), 'w') as fp:
-        yaml.dump(teams, fp, default_flow_style=False)
-        utils.report_success("Wrote team list to: {}".format(team_list))
+    team_map = {}
+    with models.database_proxy.obj:
+        for team in teams:
+            t, _ = models.Team.get_or_create(id=team['id'], name=team['name'], number=team['number'])
+            team_map[team['id']] = t
+        models.database_proxy.commit()
 
     # TODO: When /services.json gets fixed, use get_services()
     service_status = utils.get_service_status()
-    mapping = defaultdict(list)
     for status in service_status:
-        for key in FILTERED_SERVICE_STATUS:
-            del status[key]
-        team_number = status['team_number']
-        mapping[team_number].append(status)
-    mapping = dict(mapping)
-
-    with open(str(service_list), 'w') as fp:
-        yaml.dump(mapping, fp, default_flow_style=False)
-        utils.report_success("Wrote service list to: {}".format(service_list))
+        t = team_map[status['team_id']]
+        st, _ = models.Service.get_or_create(remote_id=status['id'], service_id=status['service_id'],
+                                             service_name=status['service_name'], service_port=status['service_port'],
+                                             service_url=status['service_url'], admin_status=status['admin_status'],
+                                             high_target=status['high_target'], low_target=status['low_target'],
+                                             is_rand=status['is_rand'], team=t)
 
 
 @autopwn.command()
