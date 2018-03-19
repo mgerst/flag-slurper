@@ -22,9 +22,8 @@ def autopwn():
 
 
 @autopwn.command()
-@click.option('-r', '--results', type=click.Path(), default=Project.default('results', 'results.yml'))
 @click.option('-v', '--verbose', type=click.BOOL, default=False)
-def pwn(results, verbose):
+def pwn(verbose):
     utils.report_status("Starting AutoPWN")
     p = Project.get_instance()
 
@@ -34,11 +33,9 @@ def pwn(results, verbose):
 
     p.connect_database()
     utils.report_status("Loaded project from {}".format(p.base))
-    results = p.base / results
 
     services = models.Service.select()
 
-    pwn_results = {'scan_results': []}
     for service in services:
         team = service.team
         utils.report_status("Checking team: {} ({})".format(team.number, team.name))
@@ -46,7 +43,6 @@ def pwn(results, verbose):
         flag = list(filter(lambda x: x['service'] == service.service_name, flags))
         flag = flag[0] if len(flag) == 1 else []
         result = autolib.pwn_service(service, flag)
-        pwn_results['scan_results'].append(result)
         if result.success:
             utils.report_success(result)
         elif result.skipped:
@@ -55,9 +51,7 @@ def pwn(results, verbose):
         else:
             utils.report_error(result)
 
-    pwn_results['creds'] = []
     for cred in models.CredentialBag.select():
-        pwn_results['creds'].append(cred)
         working = cred.credentials.where(models.Credential.state == models.Credential.WORKS).execute()
         if len(working):
             def display_service(cred: models.Credential):
@@ -67,10 +61,6 @@ def pwn(results, verbose):
                 map(display_service, working))))
         else:
             utils.report_warning("Credential {} works on no teams".format(cred))
-
-    with open(str(results), 'w') as results:
-        pwn_results['flags'] = autolib.flag_bag.flags
-        yaml.dump(pwn_results, results, default_flow_style=False)
 
 
 @autopwn.command()
