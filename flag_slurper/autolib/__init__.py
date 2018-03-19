@@ -6,4 +6,5 @@ pwning CDC boxes.
 """
 from . import exploit
 from .credentials import CredentialBag, Credential, credential_bag, flag_bag
-from .service import detect_service, coerce_service, pwn_service, Service
+from .models import Service
+from .service import detect_service, coerce_service, pwn_service
