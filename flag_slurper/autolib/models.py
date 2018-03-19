@@ -46,7 +46,9 @@ class Credential(BaseModel):
     REJECT = 'reject'
     id = peewee.AutoField(primary_key=True)
     state = peewee.CharField(choices=[WORKS, REJECT])
+    bag = peewee.ForeignKeyField(CredentialBag, backref='credentials')
+    service = peewee.ForeignKeyField(Service, backref='credentials')
 
 
-def create():
+def create():  # pragma: no cover
     database_proxy.create_tables([CredentialBag, Team, Service, Credential])

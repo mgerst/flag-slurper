@@ -71,7 +71,9 @@ def plant(conf, team):
 
 
 # Load additional commands
+from .credentials import creds
 from .project import project
+cli.add_command(creds)
 cli.add_command(project)
 
 # Feature detect remote functionality

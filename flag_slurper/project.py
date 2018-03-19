@@ -204,7 +204,7 @@ def env(path):
 
 
 @project.command()
-def create_db():
+def create_db():  # pragma: no cover
     p = Project.get_instance()
     p.connect_database()
     models.create()
