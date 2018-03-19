@@ -15,6 +15,6 @@ VALUES
     (4, 4, 'WWW SSH', '192.168.3.14', 22, 4, 0);
 
 
--- INSERT INTO credentialbag (username, password) VALUES
---     ('root', 'cdc'),
---     ('cdc', 'cdc');
+INSERT INTO credentialbag (username, password) VALUES
+    ('root', 'cdc'),
+    ('cdc', 'cdc');

@@ -62,5 +62,24 @@ class Credential(BaseModel):
         return "<Credential {}>".format(self.__str__())
 
 
+class Flag(BaseModel):
+    id = peewee.AutoField(primary_key=True)
+    team = peewee.ForeignKeyField(Team, backref='flags')
+    name = peewee.CharField(max_length=150)
+
+
+class CaptureNote(BaseModel):
+    id = peewee.AutoField(primary_key=True)
+    flag = peewee.ForeignKeyField(Flag, backref='notes')
+    service = peewee.ForeignKeyField(Service, backref='flag_notes')
+    data = peewee.TextField()
+    location = peewee.CharField(max_length=200)
+    notes = peewee.TextField(null=True)
+    searched = peewee.BooleanField(default=False)
+
+    def __str__(self):
+        return "{} -> {}".format(self.location, self.data)
+
+
 def create():  # pragma: no cover
-    database_proxy.create_tables([CredentialBag, Team, Service, Credential])
+    database_proxy.create_tables([CredentialBag, Team, Service, Credential, Flag, CaptureNote])

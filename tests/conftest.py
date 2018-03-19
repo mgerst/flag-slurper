@@ -7,7 +7,7 @@ from yaml import safe_load
 from flag_slurper.config import Config
 from flag_slurper.autolib import models
 
-MODELS = [models.Service, models.Credential, models.CredentialBag, models.Team]
+MODELS = [models.Service, models.Credential, models.CredentialBag, models.Team, models.Flag, models.CaptureNote]
 
 
 @pytest.fixture

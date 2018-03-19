@@ -1,13 +1,14 @@
+import logging
 import os
-import pprint
 from typing import Tuple
 
 import paramiko
 
-from flag_slurper.autolib.exploit import get_file_contents
-from .credentials import flag_bag
+from flag_slurper.autolib.exploit import get_file_contents, get_system_info
 from .exploit import find_flags, FlagConf
-from .models import Service, CredentialBag, Credential
+from .models import Service, CredentialBag, Credential, Flag, CaptureNote
+
+logger = logging.getLogger(__name__)
 
 
 def _get_ssh_client():
@@ -37,19 +38,25 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf) -> Tuple
                 cred.save()
                 working.add(cred)
 
+                sysinfo = get_system_info(ssh)
+
+                flag_obj, _ = Flag.get_or_create(team=service.team, name=flag_conf['name'])
+
                 if flag_conf:
                     location = flag_conf['name']
                     full_location = os.path.join(base_dir, location)
                     flag = get_file_contents(ssh, full_location)
                     if flag:
                         enable_search = False
-                        flag_bag.add_flag(service, (full_location, flag))
+                        note, created = CaptureNote.get_or_create(flag=flag_obj, data=flag, location=full_location,
+                                                                  notes=str(sysinfo), service=service)
 
                 if enable_search:
                     flags = find_flags(ssh, base_dir=base_dir)
                     for flag in flags:
-                        flag_bag.add_flag(service, flag)
-        except:
+                        CaptureNote.get_or_create(flag=flag_obj, data=flag[1], location=flag[0], notes=str(sysinfo),
+                                                  searched=True, service=service)
+        except Exception:
             continue
 
     if working:

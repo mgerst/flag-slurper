@@ -39,9 +39,13 @@ def cli(ctx, config, iscore_url, api_token, project, debug, no_project):
         p = Project.get_instance()
         p.load(str(project))
 
-    if debug:
+    if debug:  # pragma: no cover
         import logging
         logger = logging.getLogger("peewee")
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(logging.StreamHandler())
+
+        logger = logging.getLogger('flag_slurper')
         logger.setLevel(logging.DEBUG)
         logger.addHandler(logging.StreamHandler())
 

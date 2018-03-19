@@ -102,8 +102,7 @@ def generate():
 
 
 @autopwn.command()
-@click.option('-r', '--results', type=click.Path(), default=Project.default('results', 'results.yml'))
-def results(results):
+def results():
     p = Project.get_instance()
 
     if not p.enabled:
@@ -111,22 +110,23 @@ def results(results):
         exit(3)
 
     p.connect_database()
-    results = pathlib.Path(results)
-    results = p.base / results
-    utils.report_status("Loading results from {}".format(results))
 
-    with open(str(results), 'r') as results:
-        pwn_results = yaml.load(results)
-
-    if len(pwn_results['flags']) == 0:
+    utils.report_status("Found the following credentials")
+    flags = models.Flag.select()
+    if len(flags) == 0:
         utils.report_warning('No Flags Found')
-    else:
-        utils.report_status("Found the following flags:")
 
-        for flag in pwn_results['flags']:
+    for flag in flags:
+        notes = flag.notes.select().execute()
+        if len(notes) == 1:
+            note = notes[0]
             utils.report_success(
-                "{}/{}: {} -> {}".format(flag.service.team.number, flag.service.service_name,
-                                         flag.contents[0], flag.contents[1]))
+                "{}/{}: {} -> {}".format(flag.team.number, note.service.service_name, note.location, note.data))
+        elif len(notes) > 1:
+            data = "\n\t".join(map(str, notes))
+            utils.report_success("{}/{}:\n{}".format(flag.team.number, notes[0].service.service_name, data))
+        else:
+            continue
 
     click.echo()
     utils.report_status("Found the following credentials")
