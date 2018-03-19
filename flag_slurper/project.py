@@ -208,3 +208,6 @@ def create_db():  # pragma: no cover
     p = Project.get_instance()
     p.connect_database()
     models.create()
+
+    models.CredentialBag.create(username='root', password='cdc')
+    models.CredentialBag.create(username='cdc', password='cdc')

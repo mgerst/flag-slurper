@@ -12,14 +12,21 @@ grabbing the team list from IScorE and a list of all the services. The default c
 
 Usage
 -----
+You first need to create a project and result database:
+
+```bash
+flag-slurper project init -b ~/cdcs/isu2-18 --name "ISU2 2018"
+flag-slurper project create_db
+```
+
 To generate the team and service list you can simply run:
 
 ```bash
 flag-slurper autopwn generate
 ```
 
-This will result in both `teams.yml` and `services.yml` being generated. These files will be used by other `autopwn`
-commands so they don't need to keep hitting the IScorE API during the attack phase when the API is getting hammered.
+This will cache the team an service lists into the database. This will be used by other ``autopwn`` commands so they
+don't need to keep hitting the IScorE API during the attack phase when the API is getting hammered.
 
 After generating the local files, you can then pwn all the things!
 
@@ -27,8 +34,8 @@ After generating the local files, you can then pwn all the things!
 flag-slurper autopwn pwn
 ```
 
-This will print out what credentials worked on which machines and any flags found. These results are recorded in
-`results.yml` and can be viewed like this:
+This will print out what credentials worked on which machines and any flags found. These results are recorded in the
+database and can be viewed like this:
 
 ```bash
 flag-slurper autopwn results
@@ -94,3 +101,29 @@ You can specify as many flags as you want. All of the following fields are requi
 Here's an example of an Auto PWN run that obtained flags:
 
 [![asciicast](https://asciinema.org/a/V1NNowGyb2wGmEnhcMEgp6phq.png)](https://asciinema.org/a/V1NNowGyb2wGmEnhcMEgp6phq)
+
+Credentials
+-----------
+Credentials can be managed through the ``creds`` subcommand. To add a credential:
+
+```bash
+flag-slurper creds add root cdc
+```
+
+List credentials:
+
+```bash
+flag-slurper creds ls
+```
+
+Remove credential:
+
+```bash
+flag-slurper creds rm root cdc
+```
+
+Show details for a credential:
+
+```bash
+flag-slurper creds show root:cdc
+```
