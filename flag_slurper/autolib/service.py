@@ -13,10 +13,6 @@ SERVICE_MAP = {
 }
 
 
-# Service = namedtuple('Service', ['id', 'service_id', 'service_name', 'service_port', 'service_url', 'team_id',
-#                                  'team_name', 'team_number', 'admin_status', 'high_target', 'low_target', 'is_rand'])
-
-
 class Result:
     def __init__(self, service: Service, message: str, *, success: bool, skipped: bool):
         self.service = service

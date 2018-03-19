@@ -33,7 +33,6 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf) -> Tuple
                     full_location = os.path.join(base_dir, location)
                     flag = get_file_contents(ssh, full_location)
                     if flag:
-                        print("Got flag")
                         enable_search = False
                         flag_bag.add_flag(service, (full_location, flag))
 
