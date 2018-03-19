@@ -20,6 +20,12 @@ class CredentialBag(BaseModel):
     username = peewee.CharField(max_length=100)
     password = peewee.CharField(max_length=100)
 
+    def __str__(self):
+        return "{}:{}".format(self.username, self.password)
+
+    def __repr__(self):
+        return "<CredentialBag {}>".format(self.__str__())
+
 
 class Team(BaseModel):
     id = peewee.IntegerField(primary_key=True)
@@ -48,6 +54,12 @@ class Credential(BaseModel):
     state = peewee.CharField(choices=[WORKS, REJECT])
     bag = peewee.ForeignKeyField(CredentialBag, backref='credentials')
     service = peewee.ForeignKeyField(Service, backref='credentials')
+
+    def __str__(self):
+        return "{}:{}".format(self.bag.username, self.bag.password)
+
+    def __repr__(self):
+        return "<Credential {}>".format(self.__str__())
 
 
 def create():  # pragma: no cover

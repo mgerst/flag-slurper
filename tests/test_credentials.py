@@ -1,3 +1,5 @@
+import os
+
 from click.testing import CliRunner
 
 from flag_slurper.cli import cli
@@ -74,6 +76,6 @@ def test_creds_no_project():
     p = Project.get_instance()
     p.project_data = None
     runner = CliRunner()
-    result = runner.invoke(cli, ['creds', 'ls'])
+    result = runner.invoke(cli, ['-np', 'creds', 'ls'])
     assert result.exit_code == 4
     assert result.output == "[!] Credentials commands require an active project\n"

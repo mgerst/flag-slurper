@@ -56,14 +56,15 @@ def pwn(results, verbose):
             utils.report_error(result)
 
     pwn_results['creds'] = []
-    for cred in autolib.credential_bag.credentials():
+    for cred in models.CredentialBag.select():
         pwn_results['creds'].append(cred)
-        if len(cred.works):
-            def display_service(service: autolib.Service):
-                return "{}/{}".format(service.team.number, service.service_name)
+        working = cred.credentials.where(models.Credential.state == models.Credential.WORKS).execute()
+        if len(working):
+            def display_service(cred: models.Credential):
+                return "{}/{}".format(cred.service.team.number, cred.service.service_name)
 
             utils.report_success("Credential {} works on the following teams: \n\t- {}".format(cred, "\n\t- ".join(
-                map(display_service, cred.works))))
+                map(display_service, working))))
         else:
             utils.report_warning("Credential {} works on no teams".format(cred))
 
@@ -104,9 +105,14 @@ def generate():
 @click.option('-r', '--results', type=click.Path(), default=Project.default('results', 'results.yml'))
 def results(results):
     p = Project.get_instance()
+
+    if not p.enabled:
+        utils.report_error("This command requires a project be active")
+        exit(3)
+
+    p.connect_database()
     results = pathlib.Path(results)
-    if p.enabled:
-        results = p.base / results
+    results = p.base / results
     utils.report_status("Loading results from {}".format(results))
 
     with open(str(results), 'r') as results:
@@ -124,6 +130,14 @@ def results(results):
 
     click.echo()
     utils.report_status("Found the following credentials")
-    for scan in pwn_results['scan_results']:
-        if scan.success:
-            utils.report_success(scan)
+
+    services = models.Service.select()
+    for service in services:
+        creds = service.credentials.where(models.Credential.state == models.Credential.WORKS)
+        if len(creds) == 0:
+            continue
+
+        utils.report_success("{}/{}:{}/{} Succeeded!  Found credentials: {}".format(
+            service.team.number, service.service_url, service.service_port, service.service_name,
+            ",".join(map(str, creds))
+        ))
