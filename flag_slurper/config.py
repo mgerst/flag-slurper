@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from click import echo, prompt
+from jinja2 import Environment
 
 ROOT = Path(__file__).parent
 
@@ -81,3 +82,11 @@ class Config(ConfigParser):
         if hasattr(self, 'credentials'):
             conf['auth'] = self.credentials
         return conf
+
+    def database(self, project: str) -> str:
+        env = self.template_environment()
+        tpl = env.from_string(self['database']['url'])
+        return tpl.render(project=project)
+
+    def template_environment(self) -> Environment:
+        return Environment()

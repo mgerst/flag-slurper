@@ -159,3 +159,12 @@ def test_get_teams(config):
 
     assert len(teams) == 20
 
+
+
+@pytest.mark.parametrize('given,expected', (
+    ('root', ('root', None)),
+    ('root:cdc', ('root', 'cdc')),
+))
+def test_parse_creds(given, expected):
+    result = utils.parse_creds(given)
+    assert result == expected

@@ -1,6 +1,6 @@
 import os
 import zipfile
-from typing import Tuple, Dict, Union, Callable
+from typing import Tuple, Dict, Union, Callable, Optional
 
 import click
 import requests
@@ -141,3 +141,10 @@ def prompt_choice(template: str, info: Dict[id, Dict], prompt: str = None, title
     chosen = click.prompt(prompt, type=click.INT)
 
     return chosen
+
+
+def parse_creds(creds: str) -> Tuple[str, Optional[str]]:
+    if ':' not in creds:
+        return creds, None
+    username, password = creds.split(':')
+    return username, password

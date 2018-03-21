@@ -1,9 +1,13 @@
 from textwrap import dedent
 
 import pytest
+from peewee import SqliteDatabase
 from yaml import safe_load
 
 from flag_slurper.config import Config
+from flag_slurper.autolib import models
+
+MODELS = [models.Service, models.Credential, models.CredentialBag, models.Team, models.Flag, models.CaptureNote]
 
 
 @pytest.fixture
@@ -27,4 +31,37 @@ def create_project(tmpdir):
         p.write(dedent(text.format(dir=tmpdir)).strip())
 
         return tmpdir
+
     return _make
+
+
+@pytest.fixture
+def db():
+    test_db = SqliteDatabase(':memory:')
+
+    for model in MODELS:
+        model.bind(test_db, bind_refs=False, bind_backrefs=False)
+
+    test_db.create_tables(MODELS)
+    with test_db.transaction() as txn:
+        yield txn
+        txn.rollback()
+
+
+@pytest.fixture
+def team(db):
+    yield models.Team.create(id=1, name='CDC Team 1', number=1)
+
+
+@pytest.fixture
+def service(team):
+    yield models.Service.create(remote_id=1, service_id=1, service_name='WWW HTTP', service_port=80,
+                                service_url='www.team1.isucdc.com', admin_status=None, high_target=0, low_target=0,
+                                is_rand=False, team=team)
+
+
+@pytest.fixture
+def invalid_service(team):
+    yield models.Service.create(remote_id=2, service_id=2, service_name='WWW Custom', service_port=10391,
+                                service_url='www.team1.isucdc.com', admin_status=None, high_target=0, low_target=0,
+                                is_rand=False, team=team)

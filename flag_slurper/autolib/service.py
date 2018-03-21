@@ -1,7 +1,7 @@
-from collections import namedtuple
 from typing import Tuple, Dict, Any, Optional
 
 from .exploit import FlagConf
+from .models import Service
 from .protocols import PWN_FUNCS
 
 SERVICE_MAP = {
@@ -11,9 +11,6 @@ SERVICE_MAP = {
     443: 'https',
     3389: 'rdp',
 }
-
-Service = namedtuple('Service', ['id', 'service_id', 'service_name', 'service_port', 'service_url', 'team_id',
-                                 'team_name', 'team_number', 'admin_status', 'high_target', 'low_target', 'is_rand'])
 
 
 class Result:
@@ -31,7 +28,7 @@ class Result:
                and self.skipped == other.skipped
 
     def __str__(self):
-        header = "{team}/{url}:{port}/{proto}".format(team=self.service.team_number, url=self.url, port=self.port,
+        header = "{team}/{url}:{port}/{proto}".format(team=self.service.team.number, url=self.url, port=self.port,
                                                       proto=self.proto)
         if not self.success and not self.skipped:
             return "{} Failed pwn: {}".format(header, self.message)

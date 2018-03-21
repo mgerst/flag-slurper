@@ -1,16 +1,16 @@
-import subprocess
 import typing as tp
+from copy import deepcopy
 from pathlib import Path
 
 import click
 import yaml
-from copy import deepcopy
 from jinja2 import Environment
 from schema import Schema, Use, Optional
 from yaml import safe_load
 
+from flag_slurper.config import Config
 from . import utils
-
+from .autolib import models
 
 project_schema_v1_0 = Schema({
     '_version': Use(str, error='Must include _version'),
@@ -75,7 +75,8 @@ class Project:
             self.project_data = schema.validate(yaml)
 
     @classmethod
-    def default(cls, key: str, default: tp.Optional[tp.Any] = None, transform: tp.Optional[Transform] = None) -> Callback:
+    def default(cls, key: str, default: tp.Optional[tp.Any] = None,
+                transform: tp.Optional[Transform] = None) -> Callback:
         """
         Generate a default method for a click argument.
 
@@ -137,7 +138,7 @@ class Project:
             return []
         return self.project_data['flags']
 
-    def flag(self, team: int) -> FlagList:
+    def flag(self, team: models.Team) -> FlagList:
         if not self.enabled or 'flags' not in self.project_data:
             return []
 
@@ -147,9 +148,14 @@ class Project:
         for item in self.project_data['flags']:
             flag = deepcopy(item)
             tmpl = env.from_string(flag['name'])
-            flag['name'] = tmpl.render(num=team)
+            flag['name'] = tmpl.render(num=team.number)
             flags.append(flag)
         return flags
+
+    def connect_database(self):
+        conf = Config.get_instance()
+        db_path = conf.database(str(self.base))
+        models.initialize(db_path)
 
 
 @click.group()
@@ -195,3 +201,13 @@ def env(path):
     click.echo('export SLURPER_PROJECT={};'.format(path))
     click.echo('export unslurp() { unset SLURPER_PROJECT; unset -f unslurp; };')
     click.echo('echo "Set {} as current project. Run \'unslurp\' to unset";'.format(path))
+
+
+@project.command()
+def create_db():  # pragma: no cover
+    p = Project.get_instance()
+    p.connect_database()
+    models.create()
+
+    models.CredentialBag.create(username='root', password='cdc')
+    models.CredentialBag.create(username='cdc', password='cdc')

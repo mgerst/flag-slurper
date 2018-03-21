@@ -18,9 +18,11 @@ pass_conf = click.make_pass_decorator(Config)
 @click.option('--iscore-url', envvar='ISCORE_URL', default=None)
 @click.option('--api-token', envvar='ISCORE_API_TOKEN', default=None)
 @click.option('-p', '--project', envvar='SLURPER_PROJECT', type=click.Path(), default=None)
+@click.option('-np', '--no-project', is_flag=True)
+@click.option('-d', '--debug', is_flag=True)
 @click.version_option(version=__version__, prog_name='flag-slurper')
 @click.pass_context
-def cli(ctx, config, iscore_url, api_token, project):
+def cli(ctx, config, iscore_url, api_token, project, debug, no_project):
     ctx.obj = Config.load(config)
     ctx.obj.cond_set('iscore', 'url', iscore_url)
     ctx.obj.cond_set('iscore', 'api_token', api_token)
@@ -29,13 +31,23 @@ def cli(ctx, config, iscore_url, api_token, project):
         click.echo(ctx.get_help())
         return
 
-    if project:
+    if project and not no_project:
         project = pathlib.Path(project)
         project = project.expanduser()
         if project.is_dir():
             project = project / 'project.yml'
         p = Project.get_instance()
         p.load(str(project))
+
+    if debug:  # pragma: no cover
+        import logging
+        logger = logging.getLogger("peewee")
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(logging.StreamHandler())
+
+        logger = logging.getLogger('flag_slurper')
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(logging.StreamHandler())
 
 
 @cli.command()
@@ -71,7 +83,9 @@ def plant(conf, team):
 
 
 # Load additional commands
+from .credentials import creds
 from .project import project
+cli.add_command(creds)
 cli.add_command(project)
 
 # Feature detect remote functionality

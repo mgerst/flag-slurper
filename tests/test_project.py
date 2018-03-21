@@ -1,5 +1,3 @@
-from unittest import mock
-
 import pytest
 import yaml
 from click.testing import CliRunner
@@ -337,7 +335,7 @@ def test_project_flags(create_project):
     ]
 
 
-def test_project_flag_single(create_project):
+def test_project_flag_single(create_project, team):
     tmpdir = create_project("""
     _version: "1.0"
     project: ISU2-18
@@ -352,7 +350,7 @@ def test_project_flag_single(create_project):
     p = Project.get_instance()
     p.load(str(tmpdir.join('project.yml')))
 
-    flags = p.flag(1)
+    flags = p.flag(team)
     assert flags == [
         {
             'service': 'Web HTTP',

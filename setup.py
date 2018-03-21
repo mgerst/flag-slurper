@@ -40,6 +40,7 @@ setup(
         'pyyaml',
         'schema',
         'jinja2',
+        'peewee',
     ],
     tests_require=tests_require,
     extras_require={
