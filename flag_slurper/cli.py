@@ -19,7 +19,7 @@ pass_conf = click.make_pass_decorator(Config)
 @click.option('--api-token', envvar='ISCORE_API_TOKEN', default=None)
 @click.option('-p', '--project', envvar='SLURPER_PROJECT', type=click.Path(), default=None)
 @click.option('-np', '--no-project', is_flag=True)
-@click.option('-d', '--debug', is_flag=True)
+@click.option('-d', '--debug', count=True)
 @click.version_option(version=__version__, prog_name='flag-slurper')
 @click.pass_context
 def cli(ctx, config, iscore_url, api_token, project, debug, no_project):
@@ -41,9 +41,10 @@ def cli(ctx, config, iscore_url, api_token, project, debug, no_project):
 
     if debug:  # pragma: no cover
         import logging
-        logger = logging.getLogger("peewee")
-        logger.setLevel(logging.DEBUG)
-        logger.addHandler(logging.StreamHandler())
+        if debug > 1:
+            logger = logging.getLogger("peewee")
+            logger.setLevel(logging.DEBUG)
+            logger.addHandler(logging.StreamHandler())
 
         logger = logging.getLogger('flag_slurper')
         logger.setLevel(logging.DEBUG)

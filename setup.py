@@ -47,6 +47,9 @@ setup(
         'remote': [
             'paramiko',
         ],
+        'parallel': [
+            'psycopg2-binary',  # You need -binary to get the wheels
+        ],
         'tests': tests_require,
     },
 

@@ -10,6 +10,23 @@ grabbing the team list from IScorE and a list of all the services. The default c
 - `root:cdc`
 - `cdc:cdc`
 
+Requirements
+------------
+AutoPWN requires a database. For many cases sqlite will do, but in order to use parallel AutoPWN a server-based database
+(such as postgres) is required. This is due to sqlite only allowing one writer at a time. The database can be configured
+in your flagrc file:
+
+```ini
+[database]
+; For sqlite (default)
+url=sqlite:///{{ project }}/db.sqlite
+
+; For postgres
+url=postgres:///slurper
+```
+
+The ``{{ project }}`` variable is the file path to the current project and is optional.
+
 Usage
 -----
 You first need to create a project and result database:

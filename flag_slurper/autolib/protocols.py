@@ -32,6 +32,7 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf) -> Tuple
 
         try:
             with ssh:
+                logger.debug("Attempting {} with creds: {}".format(url, cred))
                 ssh.connect(url, port=port, username=credential.username, password=credential.password,
                             look_for_keys=False)
                 cred.state = Credential.WORKS

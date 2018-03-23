@@ -1,8 +1,7 @@
-import pathlib
-from collections import defaultdict
+import logging
+from multiprocessing import Pool
 
 import click
-import yaml
 
 from . import utils, autolib
 from .autolib import models
@@ -15,15 +14,41 @@ FILTERED_SERVICE_STATUS = ['score', 'service_order', 'in_progress', 'service_det
                            'public_visibility', 'blue_visibility', 'green_visibility', 'red_visibility',
                            'event_time']
 
+logger = logging.getLogger(__name__)
+
 
 @click.group()
 def autopwn():
     pass
 
 
+def _pwn_service(service):
+    p = Project.get_instance()
+    team = service.team
+    utils.report_status("Checking team: {} ({})".format(team.number, team.name))
+    flags = p.flag(team)
+    flag = list(filter(lambda x: x['service'] == service.service_name, flags))
+    flag = flag[0] if len(flag) == 1 else []
+    logger.debug("pwning %d", team.number)
+    result = autolib.pwn_service(service, flag)
+    logger.debug("pwned %d", team.number)
+    return result
+
+
+def _print_result(result, verbose):
+    if result.success:
+        utils.report_success(result)
+    elif result.skipped:
+        if verbose:
+            utils.report_warning(result)
+    else:
+        utils.report_error(result)
+
+
 @autopwn.command()
-@click.option('-v', '--verbose', type=click.BOOL, default=False)
-def pwn(verbose):
+@click.option('-v', '--verbose', is_flag=True)
+@click.option('-P', '--parallel', is_flag=True, help="Async AutoPWN attack")
+def pwn(verbose, parallel):
     utils.report_status("Starting AutoPWN")
     p = Project.get_instance()
 
@@ -36,20 +61,17 @@ def pwn(verbose):
 
     services = models.Service.select()
 
-    for service in services:
-        team = service.team
-        utils.report_status("Checking team: {} ({})".format(team.number, team.name))
-        flags = p.flag(team)
-        flag = list(filter(lambda x: x['service'] == service.service_name, flags))
-        flag = flag[0] if len(flag) == 1 else []
-        result = autolib.pwn_service(service, flag)
-        if result.success:
-            utils.report_success(result)
-        elif result.skipped:
-            if verbose:
-                utils.report_warning(result)
-        else:
-            utils.report_error(result)
+    if parallel:
+        procs = 2
+        print("Using pool size: {}".format(procs))
+        with Pool(processes=procs) as pool:
+            results = pool.map(_pwn_service, services)
+        for result in results:
+            _print_result(result, verbose)
+    else:
+        for service in services:
+            result = _pwn_service(service)
+            _print_result(result, verbose)
 
     for cred in models.CredentialBag.select():
         working = cred.credentials.where(models.Credential.state == models.Credential.WORKS).execute()
