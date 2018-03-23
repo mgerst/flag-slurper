@@ -83,3 +83,12 @@ class CaptureNote(BaseModel):
 
 def create():  # pragma: no cover
     database_proxy.create_tables([CredentialBag, Team, Service, Credential, Flag, CaptureNote])
+
+
+def delete():  # pragma: no cover
+    CredentialBag.delete()
+    Team.delete()
+    Service.delete()
+    Credential.delete()
+    Flag.delete()
+    CaptureNote.delete()

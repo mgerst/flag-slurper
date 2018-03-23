@@ -203,11 +203,28 @@ def env(path):
     click.echo('echo "Set {} as current project. Run \'unslurp\' to unset";'.format(path))
 
 
+def _default_creds():  # pragma: no cover
+    models.CredentialBag.create(username='root', password='cdc')
+    models.CredentialBag.create(username='cdc', password='cdc')
+
+
 @project.command()
 def create_db():  # pragma: no cover
+    """
+    Create the database and add default credentials.
+    """
     p = Project.get_instance()
     p.connect_database()
     models.create()
+    _default_creds()
 
-    models.CredentialBag.create(username='root', password='cdc')
-    models.CredentialBag.create(username='cdc', password='cdc')
+
+@project.command()
+def clear_db():  # pragma: no cover
+    """
+    Remove all entries from the database and re-create default credentials.
+    """
+    p = Project.get_instance()
+    p.connect_database()
+    models.delete()
+    _default_creds()
