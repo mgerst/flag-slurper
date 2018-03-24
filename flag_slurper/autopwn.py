@@ -1,4 +1,5 @@
 import logging
+import os
 from multiprocessing import Pool
 
 import click
@@ -62,7 +63,7 @@ def pwn(verbose, parallel):
     services = models.Service.select()
 
     if parallel:
-        procs = 2
+        procs = os.cpu_count()
         print("Using pool size: {}".format(procs))
         with Pool(processes=procs) as pool:
             results = pool.map(_pwn_service, services)
