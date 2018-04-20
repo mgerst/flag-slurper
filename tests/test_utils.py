@@ -149,7 +149,7 @@ def test_check_user(user, expected):
 @vcr.use_cassette('fixtures/servicestatus.yaml')
 def test_get_service_status():
     services = utils.get_service_status()
-    assert services[0]['service_name'] == 'DNS'
+    assert services[0]['service_name'] == 'Forum HTTP'
 
 
 @pytest.mark.skipif(not EXTERNAL_TESTS, reason="External tests disabled")
