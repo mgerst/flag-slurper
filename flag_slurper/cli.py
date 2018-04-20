@@ -87,9 +87,11 @@ def plant(conf, team):
 from .credentials import creds
 from .project import project
 from .teams import team
+from .services import service
 cli.add_command(creds)
 cli.add_command(project)
 cli.add_command(team)
+cli.add_command(service)
 
 # Feature detect remote functionality
 try:
