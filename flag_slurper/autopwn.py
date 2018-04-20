@@ -1,4 +1,5 @@
 import logging
+import os
 from multiprocessing import Pool
 
 import click
@@ -48,9 +49,13 @@ def _print_result(result, verbose):
 @autopwn.command()
 @click.option('-v', '--verbose', is_flag=True)
 @click.option('-P', '--parallel', is_flag=True, help="Async AutoPWN attack")
-def pwn(verbose, parallel):
+@click.option('-N', '--processes', type=click.INT, default=None)
+def pwn(verbose, parallel, processes):
     utils.report_status("Starting AutoPWN")
     p = Project.get_instance()
+
+    if not processes:
+        processes = os.cpu_count() + 1
 
     if not p.enabled:
         utils.report_error("AutoPwn requires a project be active")
@@ -62,9 +67,8 @@ def pwn(verbose, parallel):
     services = models.Service.select()
 
     if parallel:
-        procs = 2
-        print("Using pool size: {}".format(procs))
-        with Pool(processes=procs) as pool:
+        print("Using pool size: {}".format(processes))
+        with Pool(processes=processes) as pool:
             results = pool.map(_pwn_service, services)
         for result in results:
             _print_result(result, verbose)
