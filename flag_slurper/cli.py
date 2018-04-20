@@ -86,8 +86,10 @@ def plant(conf, team):
 # Load additional commands
 from .credentials import creds
 from .project import project
+from .teams import team
 cli.add_command(creds)
 cli.add_command(project)
+cli.add_command(team)
 
 # Feature detect remote functionality
 try:
