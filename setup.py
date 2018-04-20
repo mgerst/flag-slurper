@@ -41,6 +41,7 @@ setup(
         'schema',
         'jinja2',
         'peewee',
+        'terminaltables',
     ],
     tests_require=tests_require,
     extras_require={

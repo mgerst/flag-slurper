@@ -1,4 +1,5 @@
 import os
+import shutil
 import zipfile
 from typing import Tuple, Dict, Union, Callable, Optional
 
@@ -148,3 +149,21 @@ def parse_creds(creds: str) -> Tuple[str, Optional[str]]:
         return creds, None
     username, password = creds.split(':')
     return username, password
+
+
+def should_page(size: int) -> bool:
+    """
+    Determine whether to page output.
+
+    :param size: The size of the output (in lines)
+    :return: True if should page, False otherwise
+    """
+    term_size = shutil.get_terminal_size((80, 20))
+    return term_size.lines < size
+
+
+def conditional_page(output: str, size: int):
+    if should_page(size):
+        click.echo_via_pager(output)
+    else:
+        click.echo(output)
