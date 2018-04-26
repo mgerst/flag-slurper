@@ -2,6 +2,8 @@ from configparser import ConfigParser
 from pathlib import Path
 from typing import Optional
 
+import click
+import requests
 from click import echo, prompt
 from jinja2 import Environment
 
@@ -90,3 +92,22 @@ class Config(ConfigParser):
 
     def template_environment(self) -> Environment:
         return Environment()
+
+
+@click.group()
+def config():
+    pass
+
+
+@config.command()
+@click.option('-t', '--token', prompt=True, hide_input=True, help='An explicit api token')
+def login(token):
+    flagrc = Path('~/.flagrc')
+    click.echo("Writing token to {}".format(flagrc))
+    flagrc = flagrc.expanduser()
+
+    c = ConfigParser()
+    c.read(str(flagrc))
+    c['iscore']['api_token'] = token
+    with flagrc.open('w') as fp:
+        c.write(fp)
