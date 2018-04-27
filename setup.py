@@ -12,6 +12,7 @@ def read(fname):
 
 tests_require = [
     'pytest',
+    'pytest-cov',
     'pytest-sugar',
     'pytest-mock',
     'tox',
