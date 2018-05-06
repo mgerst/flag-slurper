@@ -1,3 +1,4 @@
+import click
 import peewee
 import playhouse.db_url
 
@@ -54,9 +55,15 @@ class Credential(BaseModel):
     state = peewee.CharField(choices=[WORKS, REJECT])
     bag = peewee.ForeignKeyField(CredentialBag, backref='credentials')
     service = peewee.ForeignKeyField(Service, backref='credentials')
+    sudo = peewee.BooleanField(default=False)
 
     def __str__(self):
-        return "{}:{}".format(self.bag.username, self.bag.password)
+        flags = ""
+
+        if self.sudo:
+            flags += click.style('!', fg='red', bold=True)
+
+        return "{}:{}{}".format(self.bag.username, self.bag.password, flags)
 
     def __repr__(self):
         return "<Credential {}>".format(self.__str__())
@@ -86,9 +93,9 @@ def create():  # pragma: no cover
 
 
 def delete():  # pragma: no cover
-    CredentialBag.delete()
-    Team.delete()
-    Service.delete()
-    Credential.delete()
-    Flag.delete()
-    CaptureNote.delete()
+    CredentialBag.delete().execute()
+    Team.delete().execute()
+    Service.delete().execute()
+    Credential.delete().execute()
+    Flag.delete().execute()
+    CaptureNote.delete().execute()

@@ -147,6 +147,7 @@ def results():
 
     click.echo()
     utils.report_status("Found the following credentials")
+    utils.report_status("Key: {} Sudo".format(click.style('!', fg='red', bold=True)))
 
     services = models.Service.select()
     for service in services:
