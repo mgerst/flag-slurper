@@ -117,7 +117,7 @@ You can specify as many flags as you want. All of the following fields are requi
  
 Here's an example of an Auto PWN run that obtained flags:
 
-[![asciicast](https://asciinema.org/a/V1NNowGyb2wGmEnhcMEgp6phq.png)](https://asciinema.org/a/V1NNowGyb2wGmEnhcMEgp6phq)
+[![asciicast](https://asciinema.org/a/SZK8Ma0lUzX8H1CE02sLOjVIT.png)](https://asciinema.org/a/SZK8Ma0lUzX8H1CE02sLOjVIT)
 
 Credentials
 -----------
