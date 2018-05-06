@@ -4,6 +4,7 @@ import playhouse.db_url
 
 # We want to allow setting up the database connection from .flagrc
 database_proxy = peewee.Proxy()
+SUDO_FLAG = click.style('!', fg='red', bold=True)
 
 
 def initialize(database_url: str):
@@ -61,7 +62,7 @@ class Credential(BaseModel):
         flags = ""
 
         if self.sudo:
-            flags += click.style('!', fg='red', bold=True)
+            flags += SUDO_FLAG
 
         return "{}:{}{}".format(self.bag.username, self.bag.password, flags)
 
@@ -85,7 +86,12 @@ class CaptureNote(BaseModel):
     searched = peewee.BooleanField(default=False)
 
     def __str__(self):
-        return "{} -> {}".format(self.location, self.data)
+        flags = ""
+
+        if "Used Sudo" in self.notes:
+            flags += SUDO_FLAG
+
+        return "{} -> {}{}".format(self.location, self.data, flags)
 
 
 def create():  # pragma: no cover

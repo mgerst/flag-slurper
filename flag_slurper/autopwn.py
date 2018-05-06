@@ -4,6 +4,7 @@ from multiprocessing import Pool
 
 import click
 
+from flag_slurper.autolib.models import SUDO_FLAG
 from . import utils, autolib
 from .autolib import models
 from .config import Config
@@ -128,7 +129,8 @@ def results():
 
     p.connect_database()
 
-    utils.report_status("Found the following credentials")
+    utils.report_status("Found the following flags")
+    utils.report_status("Key: {} Used Sudo".format(SUDO_FLAG))
     flags = models.Flag.select()
     if len(flags) == 0:
         utils.report_warning('No Flags Found')
@@ -141,13 +143,13 @@ def results():
                 "{}/{}: {} -> {}".format(flag.team.number, note.service.service_name, note.location, note.data))
         elif len(notes) > 1:
             data = "\n\t".join(map(str, notes))
-            utils.report_success("{}/{}:\n{}".format(flag.team.number, notes[0].service.service_name, data))
+            utils.report_success("{}/{}:\n\t{}".format(flag.team.number, notes[0].service.service_name, data))
         else:
             continue
 
     click.echo()
     utils.report_status("Found the following credentials")
-    utils.report_status("Key: {} Sudo".format(click.style('!', fg='red', bold=True)))
+    utils.report_status("Key: {} Sudo".format(SUDO_FLAG))
 
     services = models.Service.select()
     for service in services:

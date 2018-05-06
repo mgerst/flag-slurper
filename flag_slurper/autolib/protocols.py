@@ -49,6 +49,8 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf) -> Tuple
                 working.add(cred)
 
                 sysinfo = get_system_info(ssh)
+                if sudo:
+                    sysinfo += "\nUsed Sudo"
 
                 flag_obj, _ = Flag.get_or_create(team=service.team, name=flag_conf['name'])
 
