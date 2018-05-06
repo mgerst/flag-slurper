@@ -1,3 +1,4 @@
 [run]
+include = flag_slurper/*
 omit =
   flag_slurper/__main__.py

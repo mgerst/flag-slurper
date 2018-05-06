@@ -12,6 +12,7 @@ def read(fname):
 
 tests_require = [
     'pytest',
+    'pytest-cov',
     'pytest-sugar',
     'pytest-mock',
     'tox',
@@ -41,6 +42,7 @@ setup(
         'schema',
         'jinja2',
         'peewee',
+        'terminaltables',
     ],
     tests_require=tests_require,
     extras_require={
