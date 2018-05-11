@@ -1,8 +1,10 @@
+import click
 import peewee
 import playhouse.db_url
 
 # We want to allow setting up the database connection from .flagrc
 database_proxy = peewee.Proxy()
+SUDO_FLAG = click.style('!', fg='red', bold=True)
 
 
 def initialize(database_url: str):
@@ -54,9 +56,15 @@ class Credential(BaseModel):
     state = peewee.CharField(choices=[WORKS, REJECT])
     bag = peewee.ForeignKeyField(CredentialBag, backref='credentials')
     service = peewee.ForeignKeyField(Service, backref='credentials')
+    sudo = peewee.BooleanField(default=False)
 
     def __str__(self):
-        return "{}:{}".format(self.bag.username, self.bag.password)
+        flags = ""
+
+        if self.sudo:
+            flags += SUDO_FLAG
+
+        return "{}:{}{}".format(self.bag.username, self.bag.password, flags)
 
     def __repr__(self):
         return "<Credential {}>".format(self.__str__())
@@ -78,7 +86,12 @@ class CaptureNote(BaseModel):
     searched = peewee.BooleanField(default=False)
 
     def __str__(self):
-        return "{} -> {}".format(self.location, self.data)
+        flags = ""
+
+        if "Used Sudo" in self.notes:
+            flags += SUDO_FLAG
+
+        return "{} -> {}{}".format(self.location, self.data, flags)
 
 
 def create():  # pragma: no cover
@@ -86,9 +99,9 @@ def create():  # pragma: no cover
 
 
 def delete():  # pragma: no cover
-    CredentialBag.delete()
-    Team.delete()
-    Service.delete()
-    Credential.delete()
-    Flag.delete()
-    CaptureNote.delete()
+    CredentialBag.delete().execute()
+    Team.delete().execute()
+    Service.delete().execute()
+    Credential.delete().execute()
+    Flag.delete().execute()
+    CaptureNote.delete().execute()

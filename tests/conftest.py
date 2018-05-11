@@ -65,3 +65,8 @@ def invalid_service(team):
     yield models.Service.create(remote_id=2, service_id=2, service_name='WWW Custom', service_port=10391,
                                 service_url='www.team1.isucdc.com', admin_status=None, high_target=0, low_target=0,
                                 is_rand=False, team=team)
+
+
+@pytest.fixture
+def flag(team):
+    yield models.Flag.create(id=1, team=team, name='Test Team')

@@ -1,4 +1,3 @@
 # root:other
 root_password: "$6$.d8jGpv1krw3G$s5nA6ydHLsL9L2Isj5nMqtb.Zo8oW4JtexzA2jEVna9uG6oZkEjWwoBfsHspD/4hrH6qBx//aSSrhbKSRp3ls/"
-
-
+nosudo: true
