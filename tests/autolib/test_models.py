@@ -6,26 +6,6 @@ from flag_slurper.autolib.models import CredentialBag, Credential, CaptureNote
 SUDO_FLAG = click.style('!', fg='red', bold=True)
 
 
-@pytest.fixture
-def bag():
-    return CredentialBag(username='root', password='cdc')
-
-
-@pytest.fixture
-def sudobag():
-    return CredentialBag(username='cdc', password='cdc')
-
-
-@pytest.fixture
-def credential(bag, service):
-    yield Credential(bag=bag, state=Credential.WORKS, service=service)
-
-
-@pytest.fixture
-def sudocred(sudobag, service):
-    yield Credential(bag=sudobag, state=Credential.WORKS, service=service, sudo=True)
-
-
 def test_cred_bag__str__(bag):
     assert bag.__str__() == "root:cdc"
 
