@@ -1,4 +1,5 @@
 import logging
+import socket
 import time
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -49,8 +50,15 @@ class Governor:
         self.limits[ipaddr] = list(filter(_filter, self.limits[ipaddr]))
 
     def attempt(self, ipaddr: str):
+        if not self.enabled:
+            return
+
         self.filter(ipaddr)
         self.limits[ipaddr].append(datetime.now())
         if len(self.limits[ipaddr]) > self.times:
             logger.info("Attempting %d second delay for %s", self.delay, ipaddr)
             time.sleep(self.delay)
+
+    @staticmethod
+    def resolve_url(url: str) -> str:
+        return socket.gethostbyname(url)
