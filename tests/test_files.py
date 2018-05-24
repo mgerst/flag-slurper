@@ -13,6 +13,24 @@ def found_file(service):
                       service=service)
 
 
+@pytest.fixture()
+def files_project(create_project):
+    tmpdir = create_project("""
+    _version: "1.0"
+    project: Flag Slurper Test
+    base: {dir}/flag-test
+    flags:
+        - service: WWW SSH
+          type: blue
+          location: /root
+          name: team{{{{ num }}}}_www_root.flag
+          search: yes
+    """)
+    p = Project.get_instance()
+    p.load(str(tmpdir.join('project.yml')))
+    return str(tmpdir.join('project.yml'))
+
+
 def test_files_no_project():
     p = Project.get_instance()
     p.project_data = None
@@ -22,25 +40,25 @@ def test_files_no_project():
     assert result.output == "[!] File commands require an active project\n"
 
 
-def test_list_files(found_file):
+def test_list_files(found_file, files_project):
     runner = CliRunner()
-    result = runner.invoke(cli, ['files', 'ls'])
+    result = runner.invoke(cli, ['-p', files_project, 'files', 'ls'])
     assert result.exit_code == 0
     assert '/test/fun/file' in result.output
     assert 'ASCII text' in result.output
 
 
-def test_list_files_team(found_file):
+def test_list_files_team(found_file, files_project):
     runner = CliRunner()
-    result = runner.invoke(cli, ['files', 'ls', '-t', '100'])
+    result = runner.invoke(cli, ['-p', files_project, 'files', 'ls', '-t', '100'])
     assert result.exit_code == 1
     assert result.output == "[*] No files found for team 100\n"
 
 
-def test_show_file(found_file, mock):
+def test_show_file(found_file, mock, files_project):
     edit = mock.patch('flag_slurper.files.click.edit')
     runner = CliRunner()
-    result = runner.invoke(cli, ['files', 'show', str(found_file.id)])
+    result = runner.invoke(cli, ['-p', files_project, 'files', 'show', str(found_file.id)])
     assert result.exit_code == 0
     assert edit.called
     assert found_file.path in result.output
@@ -49,16 +67,16 @@ def test_show_file(found_file, mock):
     assert found_file.service.service_name in result.output
 
 
-def test_get_file(found_file, tmpdir):
+def test_get_file(found_file, tmpdir, files_project):
     file = tmpdir.join('testfile')
     runner = CliRunner()
-    result = runner.invoke(cli, ['files', 'get', str(found_file.id), str(file)])
+    result = runner.invoke(cli, ['-p', files_project, 'files', 'get', str(found_file.id), str(file)])
     assert result.exit_code == 0
     assert file.read() == found_file.contents.decode('utf-8')
 
 
-def test_rm_file(found_file):
+def test_rm_file(found_file, files_project):
     runner = CliRunner()
-    result = runner.invoke(cli, ['files', 'rm', str(found_file.id)])
+    result = runner.invoke(cli, ['-p', files_project, 'files', 'rm', str(found_file.id)])
     assert result.exit_code == 0
     assert File.select().where(File.id == found_file.id).count() == 0
