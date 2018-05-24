@@ -1,7 +1,7 @@
 from textwrap import dedent
 
 import pytest
-from peewee import SqliteDatabase
+from peewee import SqliteDatabase, PostgresqlDatabase
 from yaml import safe_load
 
 from flag_slurper.autolib import models
@@ -38,7 +38,7 @@ def create_project(tmpdir):
 
 @pytest.fixture
 def db():
-    test_db = SqliteDatabase(':memory:')
+    test_db = PostgresqlDatabase('slurpertest')
 
     for model in MODELS:
         model.bind(test_db, bind_refs=False, bind_backrefs=False)
