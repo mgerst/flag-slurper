@@ -4,6 +4,7 @@ from flag_slurper.autolib.governor import Governor
 
 
 def test_governor_singleton():
+    Governor.instance = None
     Governor.get_instance(True)
     gov = Governor.get_instance()
     assert gov.enabled

@@ -168,3 +168,25 @@ def test_get_teams(config):
 def test_parse_creds(given, expected):
     result = utils.parse_creds(given)
     assert result == expected
+
+
+@pytest.mark.parametrize('given,expected', (
+    ('3', 3),
+    ('5s', 5),
+    ('10m', 10 * 60),
+    ('3h', 3 * 60 * 60),
+))
+def test_parse_duration(given, expected):
+    result = utils.parse_duration(given)
+    assert result == expected
+
+
+@pytest.mark.parametrize('given', (
+    'abc',
+    '30y',
+    '2d',
+))
+def test_parse_duration_invalid(given):
+    with pytest.raises(ValueError, match=r'Unable to parse \w+ as a duration$'):
+        utils.parse_duration(given)
+

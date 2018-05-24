@@ -1,7 +1,10 @@
+import logging
 import time
 from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 class Governor:
@@ -10,6 +13,11 @@ class Governor:
     to a given ip address. This is used for fail2ban evasion.
 
     This can be configured in the flagrc.
+
+    .. warning::
+
+       The governor only tracks withing it's worker process, for a single run.
+       It **DOES NOT** persist across invocations.
 
     * ``autopwn->governor`` (default false) whether the governor is enabled.
     * ``autopwn->delay`` (default 5m) how long to wait after limiting.
@@ -44,4 +52,5 @@ class Governor:
         self.filter(ipaddr)
         self.limits[ipaddr].append(datetime.now())
         if len(self.limits[ipaddr]) > self.times:
+            logger.info("Attempting %d second delay for %s", self.delay, ipaddr)
             time.sleep(self.delay)

@@ -2,6 +2,7 @@ import os
 import shutil
 import zipfile
 from typing import Tuple, Dict, Union, Callable, Optional
+import string
 
 import click
 import requests
@@ -167,3 +168,43 @@ def conditional_page(output: str, size: int):
         click.echo_via_pager(output)
     else:
         click.echo(output)
+
+
+def parse_duration(duration: str) -> int:
+    """
+    Parses a duration of the form 10m or 5s and converts
+    them into seconds.
+
+    >>> parse_duration('5s')
+    ... 5
+    >>> parse_duration('10m')
+    ... 600
+
+    .. note::
+
+       Only one unit is supported. For example 1h30m is not supported, but 90m is.
+
+    Supported suffixes:
+
+    - ``h`` hours
+    - ``m`` minutes
+    - ``s`` seconds
+
+    An omitted suffix will be interpreted as seconds.
+
+    :param duration: The duration in string form
+    :return: The duration in seconds
+    """
+    if duration[-1] in string.digits:
+        return int(duration)
+
+    if duration[-1].lower() == 'h':
+        return int(duration[:-1]) * 60 * 60
+
+    if duration[-1].lower() == 'm':
+        return int(duration[:-1]) * 60
+
+    if duration[-1].lower() == 's':
+        return int(duration[:-1])
+
+    raise ValueError("Unable to parse {duration} as a duration".format(duration=duration))

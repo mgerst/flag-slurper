@@ -4,6 +4,7 @@ from unittest import mock
 
 from click.testing import CliRunner
 
+from flag_slurper.autolib.governor import Governor
 from flag_slurper.cli import cli
 from flag_slurper.config import Config
 from flag_slurper.models import User
@@ -97,3 +98,13 @@ def test_config_login(tmpdir):
     c.read_file(tmpdir.join('flagrc').open('r'))
     assert 'iscore' in c and 'api_token' in c['iscore']
     assert c['iscore']['api_token'] == 'abcdef'
+
+
+def test_config_governor(tmpdir):
+    rc = tmpdir.join("flagrc.ini")
+    rc.write("[autopwn]\ngovernor=yes\ndelay=6m\n")
+
+    Config.load(str(rc), noflagrc=True)
+    gov = Governor.get_instance()
+    assert gov.enabled
+    assert gov.delay == 6 * 60
