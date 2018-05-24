@@ -1,0 +1,10 @@
+---
+_version: '1.0'
+base: ./tests
+project: Test Project
+flags:
+  - service: WWW SSH
+    type: blue
+    location: /root
+    name: team{{ num }}_www_root.flag
+    search: yes
