@@ -26,10 +26,6 @@ def autopwn():
 
 
 def _pwn_service(service):
-    # Govern if necessary
-    gov = Governor.get_instance()
-    gov.attempt(gov.resolve_url(service.service_url))
-
     p = Project.get_instance()
     team = service.team
     utils.report_status("Checking team: {} ({})".format(team.number, team.name))

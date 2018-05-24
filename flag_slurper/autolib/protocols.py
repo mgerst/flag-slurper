@@ -5,6 +5,7 @@ from typing import Tuple
 import paramiko
 
 from flag_slurper.autolib.exploit import get_file_contents, get_system_info
+from flag_slurper.autolib.governor import Governor
 from .exploit import find_flags, FlagConf, can_sudo
 from .models import Service, CredentialBag, Credential, Flag, CaptureNote
 from .post import post_ssh
@@ -26,6 +27,10 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf) -> Tuple
     working = set()
     credentials = CredentialBag.select()
     for credential in credentials:
+        # Govern if necessary (and enabled)
+        gov = Governor.get_instance()
+        gov.attempt(gov.resolve_url(url))
+
         try:
             cred = credential.credentials.where(Credential.service == service).get()
         except Credential.DoesNotExist:
