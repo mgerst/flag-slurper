@@ -5,6 +5,14 @@ python:
   - "3.5"
   - "3.6"
 
+env:
+  - SLURPER_PROJECT=./tests
+
+services:
+  - postgresql
+before_script:
+  - psql -c 'create database slurpertest;' -U postgres
+
 install: pip install tox-travis codecov
 script: tox
 after_success:

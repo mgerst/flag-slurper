@@ -46,7 +46,7 @@ class Service(BaseModel):
     high_target = peewee.IntegerField(null=True)
     low_target = peewee.IntegerField(null=True)
     is_rand = peewee.BooleanField(default=False)
-    team = peewee.ForeignKeyField(Team, backref='services')
+    team = peewee.ForeignKeyField(Team, backref='services', on_delete='CASCADE')
 
 
 class Credential(BaseModel):
@@ -54,8 +54,8 @@ class Credential(BaseModel):
     REJECT = 'reject'
     id = peewee.AutoField(primary_key=True)
     state = peewee.CharField(choices=[WORKS, REJECT])
-    bag = peewee.ForeignKeyField(CredentialBag, backref='credentials')
-    service = peewee.ForeignKeyField(Service, backref='credentials')
+    bag = peewee.ForeignKeyField(CredentialBag, backref='credentials', on_delete='CASCADE')
+    service = peewee.ForeignKeyField(Service, backref='credentials', on_delete='CASCADE')
     sudo = peewee.BooleanField(default=False)
 
     def __str__(self):
@@ -79,7 +79,7 @@ class Flag(BaseModel):
 class CaptureNote(BaseModel):
     id = peewee.AutoField(primary_key=True)
     flag = peewee.ForeignKeyField(Flag, backref='notes')
-    service = peewee.ForeignKeyField(Service, backref='flag_notes')
+    service = peewee.ForeignKeyField(Service, backref='flag_notes', on_delete='CASCADE')
     data = peewee.TextField()
     location = peewee.CharField(max_length=200)
     notes = peewee.TextField(null=True)
@@ -94,8 +94,17 @@ class CaptureNote(BaseModel):
         return "{} -> {}{}".format(self.location, self.data, flags)
 
 
+class File(BaseModel):
+    id = peewee.AutoField(primary_key=True)
+    path = peewee.TextField()
+    contents = peewee.BlobField()
+    mime_type = peewee.TextField(null=True)
+    info = peewee.TextField(null=True, help_text="Output of `file`")
+    service = peewee.ForeignKeyField(Service, backref='files', on_delete='CASCADE')
+
+
 def create():  # pragma: no cover
-    database_proxy.create_tables([CredentialBag, Team, Service, Credential, Flag, CaptureNote])
+    database_proxy.create_tables([CredentialBag, Team, Service, Credential, Flag, CaptureNote, File])
 
 
 def delete():  # pragma: no cover
@@ -105,3 +114,4 @@ def delete():  # pragma: no cover
     Credential.delete().execute()
     Flag.delete().execute()
     CaptureNote.delete().execute()
+    File.delete().execute()

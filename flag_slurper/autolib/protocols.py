@@ -2,12 +2,12 @@ import logging
 import os
 from typing import Tuple
 
-import requests
 import paramiko
 
 from flag_slurper.autolib.exploit import get_file_contents, get_system_info
 from .exploit import find_flags, FlagConf, can_sudo
 from .models import Service, CredentialBag, Credential, Flag, CaptureNote
+from .post import post_ssh
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +69,9 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf) -> Tuple
                     for flag in flags:
                         CaptureNote.get_or_create(flag=flag_obj, data=flag[1], location=flag[0], notes=str(sysinfo),
                                                   searched=True, service=service)
+
+                if cred.state == Credential.WORKS:
+                    post_ssh(ssh, cred)
         except paramiko.ssh_exception.AuthenticationException:
             continue
         except Exception:
