@@ -3,12 +3,23 @@ from click.testing import CliRunner
 
 from flag_slurper.autolib.models import File
 from flag_slurper.cli import cli
+from flag_slurper.project import Project
 
 
 @pytest.fixture
 def found_file(service):
-    yield File.create(id=1, path='/test/fun/file', contents='abcdef'.encode('utf-8'), mime_type='text/plain', info='ASCII text',
+    yield File.create(id=1, path='/test/fun/file', contents='abcdef'.encode('utf-8'), mime_type='text/plain',
+                      info='ASCII text',
                       service=service)
+
+
+def test_files_no_project():
+    p = Project.get_instance()
+    p.project_data = None
+    runner = CliRunner()
+    result = runner.invoke(cli, ['-np', 'files', 'ls'])
+    assert result.exit_code == 4
+    assert result.output == "[!] File commands require an active project\n"
 
 
 def test_list_files(found_file):
