@@ -7,6 +7,8 @@ import requests
 from click import echo, prompt
 from jinja2 import Environment
 
+from flag_slurper.autolib.governor import Governor
+
 ROOT = Path(__file__).parent
 
 
@@ -31,8 +33,18 @@ class Config(ConfigParser):
             conffiles.append(extra)
         conf.read(conffiles)
 
+        conf.configure_governor()
+
         cls.instance = conf
         return conf
+
+    def configure_governor(self):
+        from .utils import parse_duration
+        gov = Governor.get_instance()
+        gov.enabled = self.getboolean('autopwn', 'governor')
+        gov.delay = parse_duration(self['autopwn']['delay'])
+        gov.window = parse_duration(self['autopwn']['window'])
+        gov.times = self.getint('autopwn', 'times')
 
     @staticmethod
     def get_instance():

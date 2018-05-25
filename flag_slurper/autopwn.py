@@ -4,6 +4,7 @@ from multiprocessing import Pool
 
 import click
 
+from flag_slurper.autolib.governor import Governor
 from flag_slurper.autolib.models import SUDO_FLAG
 from . import utils, autolib
 from .autolib import models
