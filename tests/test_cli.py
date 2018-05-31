@@ -35,7 +35,7 @@ def test_cli_version():
     runner = CliRunner()
     result = runner.invoke(cli, ['--version'])
     assert result.exit_code == 0
-    assert result.output == "flag-slurper, version 0.2\n"
+    assert result.output == "flag-slurper, version 0.5\n"
 
 
 def test_cli_pass_config():
