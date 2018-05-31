@@ -1,5 +1,6 @@
 import logging
 import os
+from functools import partial
 from multiprocessing import Pool
 
 import click
@@ -25,7 +26,7 @@ def autopwn():
     pass
 
 
-def _pwn_service(service):
+def _pwn_service(limit_creds, service):
     p = Project.get_instance()
     team = service.team
     utils.report_status("Checking team: {} ({})".format(team.number, team.name))
@@ -33,7 +34,7 @@ def _pwn_service(service):
     flag = list(filter(lambda x: x['service'] == service.service_name, flags))
     flag = flag[0] if len(flag) == 1 else []
     logger.debug("pwning %d", team.number)
-    result = autolib.pwn_service(service, flag)
+    result = autolib.pwn_service(service, flag, limit_creds)
     logger.debug("pwned %d", team.number)
     return result
 
@@ -52,7 +53,8 @@ def _print_result(result, verbose):
 @click.option('-v', '--verbose', is_flag=True)
 @click.option('-P', '--parallel', is_flag=True, help="Async AutoPWN attack")
 @click.option('-N', '--processes', type=click.INT, default=None)
-def pwn(verbose, parallel, processes):
+@click.option('-c', '--limit-creds', type=click.STRING, multiple=True)
+def pwn(verbose, parallel, processes, limit_creds):
     utils.report_status("Starting AutoPWN")
     p = Project.get_instance()
 
@@ -71,16 +73,21 @@ def pwn(verbose, parallel, processes):
     if parallel:
         print("Using pool size: {}".format(processes))
         with Pool(processes=processes) as pool:
-            results = pool.map(_pwn_service, services)
+            pwn_service = partial(_pwn_service, limit_creds)
+            results = pool.map(pwn_service, services)
 
         for result in results:
             _print_result(result, verbose)
     else:
         for service in services:
-            result = _pwn_service(service)
+            result = _pwn_service(limit_creds, service)
             _print_result(result, verbose)
 
-    for cred in models.CredentialBag.select():
+    bags = models.CredentialBag.select()
+    if limit_creds:
+        bags = bags.where(models.CredentialBag.username.in_(limit_creds))
+
+    for cred in bags:
         working = cred.credentials.where(models.Credential.state == models.Credential.WORKS).execute()
         if len(working):
             def display_service(cred: models.Credential):

@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, Any, Optional
+from typing import Tuple, Dict, Any, Optional, List
 
 from .exploit import FlagConf
 from .models import Service
@@ -51,10 +51,10 @@ def detect_service(service: Service) -> Tuple[str, int, str]:
     return SERVICE_MAP[service.service_port], service.service_url, service.service_port
 
 
-def pwn_service(service: Service, flag_conf: Optional[FlagConf]) -> Result:
+def pwn_service(service: Service, flag_conf: Optional[FlagConf], limit_creds: Optional[List[str]]) -> Result:
     proto, url, port = detect_service(service)
     if proto not in PWN_FUNCS:
         return Result(service=service, message="Protocol not supported for autopwn", success=False, skipped=True)
 
-    message, success, skipped = PWN_FUNCS[proto](url, port, service, flag_conf)
+    message, success, skipped = PWN_FUNCS[proto](url, port, service, flag_conf, limit_creds)
     return Result(service=service, message=message, success=success, skipped=skipped)
