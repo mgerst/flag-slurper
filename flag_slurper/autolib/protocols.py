@@ -4,7 +4,7 @@ from typing import Tuple
 
 import paramiko
 
-from flag_slurper.autolib.exploit import get_file_contents, get_system_info
+from flag_slurper.autolib.exploit import get_file_contents, get_system_info, LimitCreds
 from flag_slurper.autolib.governor import Governor
 from .exploit import find_flags, FlagConf, can_sudo
 from .models import Service, CredentialBag, Credential, Flag, CaptureNote
@@ -19,13 +19,18 @@ def _get_ssh_client():
     return ssh
 
 
-def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf) -> Tuple[str, bool, bool]:
+def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf,
+            limit_creds: LimitCreds) -> Tuple[str, bool, bool]:
     ssh = _get_ssh_client()
     base_dir = flag_conf['location'] if flag_conf else None
     enable_search = flag_conf['search'] if flag_conf else True
 
     working = set()
     credentials = CredentialBag.select()
+
+    if limit_creds:
+        credentials = credentials.where(CredentialBag.username.in_(limit_creds))
+
     for credential in credentials:
         # Govern if necessary (and enabled)
         gov = Governor.get_instance()

@@ -46,7 +46,7 @@ def test_detect_unknown_service(invalid_service):
 
 
 def test_pwn_invalid_service(invalid_service):
-    res = pwn_service(invalid_service, None)
+    res = pwn_service(invalid_service, None, None)
     assert not res.success
     assert res.skipped
     assert res.message == "Protocol not supported for autopwn"
@@ -57,7 +57,7 @@ def test_pwn_service(service, mocker):
     pwn_http.return_value = "service up", True, False
 
     PWN_FUNCS['http'] = pwn_http
-    res = pwn_service(service, None)
+    res = pwn_service(service, None, None)
 
     result = Result(service, "service up", success=True, skipped=False)
     assert result == res
