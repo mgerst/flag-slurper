@@ -25,9 +25,6 @@ class CredentialBag(BaseModel):
     def __str__(self):
         return "{}:{}".format(self.username, self.password)
 
-    def __repr__(self):
-        return "<CredentialBag {}>".format(self.__str__())
-
 
 class Team(BaseModel):
     id = peewee.IntegerField(primary_key=True)
@@ -65,9 +62,6 @@ class Credential(BaseModel):
             flags += SUDO_FLAG
 
         return "{}:{}{}".format(self.bag.username, self.bag.password, flags)
-
-    def __repr__(self):
-        return "<Credential {}>".format(self.__str__())
 
 
 class Flag(BaseModel):

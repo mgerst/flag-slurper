@@ -11,7 +11,7 @@ def test_cred_bag__str__(bag):
 
 
 def test_cred_bag__repr__(bag):
-    assert bag.__repr__() == "<CredentialBag root:cdc>"
+    assert bag.__repr__() == "<CredentialBag: root:cdc>"
 
 
 def test_cred__str__(credential):
@@ -19,7 +19,7 @@ def test_cred__str__(credential):
 
 
 def test_cred__repr__(credential):
-    assert credential.__repr__() == "<Credential root:cdc>"
+    assert credential.__repr__() == "<Credential: root:cdc>"
 
 
 def test_cred_sudo__str__(sudocred):
@@ -27,7 +27,7 @@ def test_cred_sudo__str__(sudocred):
 
 
 def test_cred_sudo__repr__(sudocred):
-    assert sudocred.__repr__() == "<Credential cdc:cdc{}>".format(SUDO_FLAG)
+    assert sudocred.__repr__() == "<Credential: cdc:cdc{}>".format(SUDO_FLAG)
 
 
 def test_capture_note__str__(flag, service):
