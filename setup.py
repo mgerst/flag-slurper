@@ -10,15 +10,26 @@ def read(fname):
     return open(os.path.join(ROOT, fname)).read()
 
 
+install_requires = [
+    'requests==2.18.4',
+    'click==6.7',
+    'pyyaml==3.12',
+    'schema==0.6.7',
+    'jinja2==2.10',
+    'peewee==3.5.0',
+    'terminaltables==3.1.0',
+]
+
+
 tests_require = [
-    'pytest',
-    'pytest-cov',
-    'pytest-sugar',
-    'pytest-mock',
-    'tox',
-    'vcrpy',
-    'responses',
-    'pretend',
+    'pytest==3.4.0',
+    'pytest-cov==2.5.1',
+    'pytest-sugar==0.9.1',
+    'pytest-mock==1.7.1',
+    'tox==2.9.1',
+    'vcrpy==1.11.1',
+    'responses==0.8.1',
+    'pretend==1.0.8',
 ]
 
 
@@ -35,22 +46,14 @@ setup(
     setup_requires=[
         'pytest-runner',
     ],
-    install_requires=[
-        'requests',
-        'click',
-        'pyyaml',
-        'schema',
-        'jinja2',
-        'peewee',
-        'terminaltables',
-    ],
+    install_requires=install_requires,
     tests_require=tests_require,
     extras_require={
         'remote': [
-            'paramiko',
+            'paramiko==2.4.1',
         ],
         'parallel': [
-            'psycopg2-binary',  # You need -binary to get the wheels
+            'psycopg2-binary==2.7.4',  # You need -binary to get the wheels
         ],
         'tests': tests_require,
     },
