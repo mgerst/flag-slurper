@@ -195,6 +195,9 @@ def parse_duration(duration: str) -> int:
     :param duration: The duration in string form
     :return: The duration in seconds
     """
+    if len(duration) == 0:
+        raise ValueError("Unable to parse empty duration")
+
     if duration[-1] in string.digits:
         return int(duration)
 

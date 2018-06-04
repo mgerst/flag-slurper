@@ -1,9 +1,12 @@
+import string
 import zipfile
 
 import click
 import pytest
 import vcr
 from click.testing import CliRunner
+from hypothesis import given, assume
+from hypothesis.strategies import text, composite, integers, from_regex
 
 from flag_slurper import utils
 from flag_slurper.models import User
@@ -189,4 +192,15 @@ def test_parse_duration(given, expected):
 def test_parse_duration_invalid(given):
     with pytest.raises(ValueError, match=r'Unable to parse \w+ as a duration$'):
         utils.parse_duration(given)
+
+
+def test_parse_duration_empty():
+    with pytest.raises(ValueError, match=r'Unable to parse empty duration'):
+        utils.parse_duration('')
+
+
+@given(from_regex(r'\A[0-9]+[smh]?\Z'))
+def test_parse_duration_hyp(s):
+    assume(len(s) > 0)
+    assert utils.parse_duration(s) >= 0
 

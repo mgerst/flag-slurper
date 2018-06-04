@@ -30,6 +30,7 @@ tests_require = [
     'vcrpy==1.11.1',
     'responses==0.8.1',
     'pretend==1.0.8',
+    'hypothesis==3.57.0',
 ]
 
 
