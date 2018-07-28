@@ -61,3 +61,15 @@ def test_pwn_service(service, mocker):
 
     result = Result(service, "service up", success=True, skipped=False)
     assert result == res
+    assert pwn_http.called
+
+
+def test_pwn_flag_conf(service, mocker):
+    pwn_http = mocker.MagicMock()
+    pwn_http.return_value = "service up", True, False
+
+    PWN_FUNCS['http'] = pwn_http
+    res = pwn_service(service, {}, None)
+
+    result = Result(service, "service up", success=True, skipped=False)
+    assert result == res
