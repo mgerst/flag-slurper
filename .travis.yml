@@ -4,6 +4,11 @@ cache: pip
 python:
   - "3.5"
   - "3.6"
+  - "3.7"
+
+matrix:
+  allow_failures:
+  - python: "3.7"
 
 env:
   - SLURPER_PROJECT=./tests
