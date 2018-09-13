@@ -74,7 +74,7 @@ This will create a project named "ISU2 2018" in the folder `~/cdcs/isu2-18`. You
 activate the project.
 
 ```bash
-eval $(flag-slurper env ~/cdcs/isu2-18)
+eval $(flag-slurper project env ~/cdcs/isu2-18)
 ```
 
 When you want to deactivate a project, run the `unslurp` command.
@@ -108,7 +108,7 @@ You can specify as many flags as you want. All of the following fields are requi
 
 - **service**: The name of the service this flag is associated with. Auto PWN matches against this when determining what
   flags it should look for when attacking a service.
-- **type**: Which flag type this is `blue` (read) or `red` (write). Currently on `blue` is supported.
+- **type**: Which flag type this is `blue` (read) or `red` (write). Currently only `blue` is supported.
 - **location**: The directory the flag is supposed to be located in.
 - **name**: The expected file name of the flag. Pay close attention to `{{ num }}`. This is a placeholder that will be
   replaced with the team number during the attack.

@@ -34,6 +34,13 @@ tests_require = [
 ]
 
 
+docs_require = [
+    'sphinx',
+    'sphinx-autobuild',
+    'sphinx_rtd_theme',
+]
+
+
 setup(
     name='flag_slurper',
     version=__version__,
@@ -57,6 +64,7 @@ setup(
             'psycopg2-binary==2.7.4',  # You need -binary to get the wheels
         ],
         'tests': tests_require,
+        'docs': docs_require,
     },
 
     classifiers=[
