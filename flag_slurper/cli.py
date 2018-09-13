@@ -1,3 +1,5 @@
+import code
+
 import click
 import pathlib
 
@@ -107,7 +109,6 @@ def shell(config):
     modellist = {x[0]: x[1] for x in modellist}
     gl.update(modellist)
 
-    import code
     code.InteractiveConsole(locals=gl).interact()
 
 

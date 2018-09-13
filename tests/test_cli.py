@@ -128,3 +128,16 @@ def test_cli_load_project_append_file(mocker, dummy_cmd, tmpdir):
     runner = CliRunner()
     runner.invoke(cli, ['-p', str(tmpdir), 'cmd'])
     assert project.load.called_with(str(tmpdir.join('project.yml')))
+
+
+def test_cli_shell(mocker):
+    prompt = mocker.patch('flag_slurper.config.prompt')
+    prompt.side_effect = ['ABC', '']
+    click = mocker.patch('flag_slurper.cli.click.prompt')
+    click.return_value = 0
+    code = mocker.patch('flag_slurper.cli.code.InteractiveConsole')
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ['shell'])
+    assert result.exit_code == 0
+    assert code.called
