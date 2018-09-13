@@ -84,18 +84,30 @@ def plant(conf, team):
 
 
 @cli.command()
-def shell():
+@pass_conf
+def shell(config):
     p = Project.get_instance()
     if not p.enabled:
         utils.report_error("The shell requires an active project")
         exit(4)
     p.connect_database()
 
-    import code
-    gl = globals()
-    gl.update({
+    from . import autolib
+
+    gl = {
         'project': p,
-    })
+        'Project': Project,
+        'config': config,
+        'Config': Config,
+        'autolib': autolib,
+    }
+
+    import inspect
+    modellist = inspect.getmembers(autolib.models, inspect.isclass)
+    modellist = {x[0]: x[1] for x in modellist}
+    gl.update(modellist)
+
+    import code
     code.InteractiveConsole(locals=gl).interact()
 
 

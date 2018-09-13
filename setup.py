@@ -22,7 +22,7 @@ install_requires = [
 
 
 tests_require = [
-    'pytest==3.4.0',
+    'pytest==3.4.2',
     'pytest-cov==2.5.1',
     'pytest-sugar==0.9.1',
     'pytest-mock==1.7.1',
