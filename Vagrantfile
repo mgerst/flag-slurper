@@ -18,17 +18,23 @@ Vagrant.configure("2") do |config|
         config.vm.define "team#{n}" do |team|
             team.vm.hostname = "team#{n}"
             team.vm.network :private_network, ip: "192.168.3.1#{n}"
+        end
+    end
 
-            if n == N
-                team.vm.provision :ansible do |ansible|
-                    ansible.limit = "all"
-                    ansible.playbook = "provision/main.yml"
-                    ansible.extra_vars = {
-                        "apt_cache_enabled": ENV['APT_CACHE_ENABLED'] == "true" || false,
-                        "apt_cache_url": ENV['APT_CACHE_URL'],
-                    }
-                end
-            end
+    config.vm.define 'dns' do |dns|
+        dns.vm.hostname = 'dns'
+        dns.vm.network :private_network, ip: "192.168.3.99"
+
+        dns.vm.provision :ansible do |ansible|
+            ansible.limit = "all"
+            ansible.playbook = "provision/main.yml"
+            ansible.extra_vars = {
+                'apt_cache_enabled': ENV['APT_CACHE_ENABLED'] == 'true' || false,
+                'apt_cache_url': ENV['APT_CACHE_URL'],
+            }
+            ansible.groups = {
+                'dns': ['dns'],
+            }
         end
     end
 end

@@ -30,6 +30,7 @@ class Team(BaseModel):
     id = peewee.IntegerField(primary_key=True)
     name = peewee.CharField(max_length=200)
     number = peewee.IntegerField()
+    domain = peewee.CharField(max_length=200)
 
 
 class Service(BaseModel):

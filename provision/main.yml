@@ -70,3 +70,22 @@
   handlers:
     - name: restart ssh
       service: name=ssh state=restarted
+
+- hosts: dns
+  become: yes
+  tasks:
+    - name: Installing apt packages
+      apt: name={{ item }} state=present
+      with_items:
+        - bind9
+
+    - name: Configure bind
+      template: src={{ item }} dest=/etc/bind/{{ item }}
+      with_items:
+        - named.conf.local
+        - db.team1.isucdc.com.conf
+      notify: reload bind9
+
+  handlers:
+    - name: reload bind9
+      service: name=bind9 state=reloaded

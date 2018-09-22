@@ -102,6 +102,8 @@ def pwn_dns(url: str, port: int, service: Service, flag_conf: FlagConf,
             DNSResult.get_or_create(team=service.team, name=name.to_text(), record=record.to_text())
     except DNSException:
         return 'Unable to AXFR', False, False
+    except:
+        return 'Unable to connect', False, False
     else:
         return 'Got zone {} from AXFR'.format(service.team.domain), True, False
 
