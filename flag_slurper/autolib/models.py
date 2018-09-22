@@ -97,8 +97,14 @@ class File(BaseModel):
     service = peewee.ForeignKeyField(Service, backref='files', on_delete='CASCADE')
 
 
+class DNSResult(BaseModel):
+    team = peewee.ForeignKeyField(Team, backref='dns', on_delete='CASCADE')
+    name = peewee.TextField()
+    record = peewee.TextField()
+
+
 def create():  # pragma: no cover
-    database_proxy.create_tables([CredentialBag, Team, Service, Credential, Flag, CaptureNote, File])
+    database_proxy.create_tables([CredentialBag, Team, Service, Credential, Flag, CaptureNote, File, DNSResult])
 
 
 def delete():  # pragma: no cover
@@ -109,3 +115,4 @@ def delete():  # pragma: no cover
     Flag.delete().execute()
     CaptureNote.delete().execute()
     File.delete().execute()
+    DNSResult.delete().execute()
