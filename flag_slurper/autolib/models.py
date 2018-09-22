@@ -98,6 +98,7 @@ class File(BaseModel):
 
 
 class DNSResult(BaseModel):
+    id = peewee.AutoField(primary_key=True)
     team = peewee.ForeignKeyField(Team, backref='dns', on_delete='CASCADE')
     name = peewee.TextField()
     record = peewee.TextField()

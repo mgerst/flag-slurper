@@ -8,7 +8,7 @@ from flag_slurper.autolib import models
 from flag_slurper.config import Config
 
 MODELS = [models.Service, models.Credential, models.CredentialBag, models.Team, models.Flag, models.CaptureNote,
-          models.File]
+          models.File, models.DNSResult]
 
 
 @pytest.fixture
