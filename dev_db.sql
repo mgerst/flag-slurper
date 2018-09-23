@@ -13,4 +13,4 @@ VALUES
     (2, 2, 'WWW SSH', '192.168.3.12', 22, 2, false),
     (3, 3, 'WWW SSH', '192.168.3.13', 22, 3, false),
     (4, 4, 'WWW SSH', '192.168.3.14', 22, 4, false),
-    (5, 5, 'DNS', '192.168.3.11', 53, 1, false);
+    (5, 5, 'DNS', '192.168.3.11', 53, 1, false); -- DNS is handled automatically

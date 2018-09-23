@@ -99,10 +99,11 @@ def pwn_dns(url: str, port: int, service: Service, flag_conf: FlagConf,
         names = z.nodes.keys()
         for name in names:
             record = z[name]
-            DNSResult.get_or_create(team=service.team, name=name.to_text(), record=record.to_text())
+            DNSResult.get_or_create(team=service.team, name=name.to_text(), record=record.to_text(name))
     except DNSException:
         return 'Unable to AXFR', False, False
     except:
+        logger.exception('Cannot connect to DNS for AXFR')
         return 'Unable to connect', False, False
     else:
         return 'Got zone {} from AXFR'.format(service.team.domain), True, False

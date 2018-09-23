@@ -34,10 +34,10 @@ def ls(team):
             records = records.where(DNSResult.team.number == team)
 
         if records.count() == 0:
-            utils.report_warning("No records found for team {}".format(Team))
+            utils.report_warning("No records found for team {}".format(team))
             exit(1)
 
-        data = [[r.id, r.name, r.record] for r in records]
-        data.insert(0, ['ID', 'Name', 'Record'])
+        data = [[r.id, r.team.number, r.name, r.record] for r in records]
+        data.insert(0, ['ID', 'Team', 'Name', 'Record'])
         table = AsciiTable(data)
         utils.conditional_page(table.table, len(data))
