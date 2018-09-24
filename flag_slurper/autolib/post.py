@@ -14,11 +14,14 @@ Things that don't belong here:
 """
 import logging
 import os
+from abc import ABC, abstractmethod
 from collections import deque
 from typing import Tuple
 
 import paramiko
+from schema import Schema, Optional
 
+from flag_slurper.autolib import Service
 from .exploit import get_directory, get_file, run_command, run_sudo, expand_wildcard
 from .models import Credential, File
 
@@ -104,3 +107,116 @@ def post_ssh(ssh: paramiko.SSHClient, credential: Credential):
                             service=credential.service)
             else:
                 logger.error("There was an error retrieving sensitive file %s: %s", path, contents)
+
+
+class PostContext(dict):
+    """
+    A wrapper method for passing post pwn methods arbitrary data.
+
+    This allows pwn functions to pass whatever arbitrary data they
+    need onto the post plugins in an extensible way.
+    """
+
+    def validate(self, schema: dict) -> 'PostContext':
+        """
+        Allow a plugin to enforce their own schema for
+        their context data. The ``Schema`` object is
+        created by the context, not the plugin.
+
+        :param schema: A dictionary containing the schema
+        :return: Returns the context for chaining
+        """
+        Schema(schema, ignore_extra_keys=True).validate(self)
+        return self
+
+
+class PostPlugin(ABC):
+    """
+    Defines a post pwn plugin.
+
+    Plugins are configured in the ``post`` key to a project. For example:
+
+    .. code-block:: yaml
+
+        ---
+        _version: "0.1"
+        ...
+        post:
+          - service: WWW SSH
+            commands:
+              - <post plugin name>:
+                  <arguments>
+    """
+
+    name = None
+    schema = None
+    context_schema = None
+    config = None
+
+    def configure(self, config: dict) -> dict:
+        """
+        Configure the plugin.
+
+        This provides the base configuration implementation. It
+        simply just validates the schema against the given config.
+        Plugins that need more involved configuration may override
+        this method.
+
+        Plugins must define their own schema by overriding the
+        ``schema`` class variable.
+
+
+        :param config:
+        :return:
+        """
+        if not self.schema:
+            raise ValueError('The schema for {} has not been configured'.format(self.name))
+        config = Schema(self.schema).validate(config)
+        return config
+
+    @abstractmethod
+    def run(self, context: PostContext):
+        """
+        Run the post pwn plugin.
+
+        This is where the plugin will perform any actions it needs. All
+        run methods MUST call their super before accessing the given
+        context, otherwise it must attempt to safely access context
+        entries.
+
+        :param context: The context given to the post plugin
+        """
+        if not self.context_schema:
+            raise ValueError('The config_schema for {} has not been configured'.format(self.name))
+        context.validate(self.context_schema)
+
+    @abstractmethod
+    def predicate(self, service: Service, context: PostContext) -> bool:
+        """
+        Determines whether the plugin should be run for the given service,
+        context, and configuration. The plugin's configuration will have
+        been validated at this point.
+
+        :param service: The current service to test against
+        :param context: The current post context
+        :return: True if this plugin should run, False otherwise
+        """
+        raise NotImplementedError
+
+
+class SSHFileExfil(PostPlugin):
+    name = 'ssh_exfil'
+    schema = {
+        Optional('files', default=[]): [str],
+        Optional('merge_files', default=True): bool,
+    }
+    context_schema = {
+        'ssh': paramiko.SSHClient,
+        'credentials': Credential,
+    }
+
+    def run(self, context: PostContext):
+        super().run(context)
+
+    def predicate(self, service: Service, context: PostContext) -> bool:
+        pass
