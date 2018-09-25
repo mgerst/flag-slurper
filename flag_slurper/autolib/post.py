@@ -16,7 +16,7 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from collections import deque
-from typing import Tuple
+from typing import Tuple, Type, Dict
 
 import paramiko
 from schema import Schema, Optional
@@ -175,7 +175,7 @@ class PostPlugin(ABC):
         return config
 
     @abstractmethod
-    def run(self, context: PostContext):
+    def run(self, service: Service, context: PostContext) -> bool:
         """
         Run the post pwn plugin.
 
@@ -184,11 +184,15 @@ class PostPlugin(ABC):
         context, otherwise it must attempt to safely access context
         entries.
 
+        :param service: The service we are currently attacking
         :param context: The context given to the post plugin
+        :returns: True if successful, False otherwise
+        :raises ValueError: if the context schema has not been set
         """
-        if not self.context_schema:
+        if self.context_schema is None:
             raise ValueError('The config_schema for {} has not been configured'.format(self.name))
         context.validate(self.context_schema)
+        return True
 
     @abstractmethod
     def predicate(self, service: Service, context: PostContext) -> bool:
@@ -204,6 +208,28 @@ class PostPlugin(ABC):
         raise NotImplementedError
 
 
+class PluginRegistry:
+    def __init__(self):
+        self.registry: Dict[str, PostPlugin] = {}
+
+    def register(self, plugin: Type[PostPlugin]):
+        if not issubclass(plugin, PostPlugin):
+            raise ValueError('Plugins must extend PostPlugin')
+        if plugin.name in self.registry:
+            raise ValueError('Plugin already registered by this name: {}'.format(plugin.name))
+        self.registry[plugin.name] = plugin()
+
+    def configure(self, config: dict):
+        for plugin in self.registry.values():
+            plugin.configure(config)
+
+    def post(self, service: Service, context: PostContext) -> bool:
+        results = [plugin.run(service, context)
+                   for plugin in self.registry.values()
+                   if plugin.predicate(service, context)]
+        return all(results)
+
+
 class SSHFileExfil(PostPlugin):
     name = 'ssh_exfil'
     schema = {
@@ -215,8 +241,9 @@ class SSHFileExfil(PostPlugin):
         'credentials': Credential,
     }
 
-    def run(self, context: PostContext):
-        super().run(context)
+    def run(self, service: Service, context: PostContext) -> bool:
+        super().run(service, context)
+        return False
 
     def predicate(self, service: Service, context: PostContext) -> bool:
         pass
