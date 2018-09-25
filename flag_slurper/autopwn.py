@@ -112,7 +112,8 @@ def generate():
     team_map = {}
     with models.database_proxy.obj:
         for team in teams:
-            t, _ = models.Team.get_or_create(id=team['id'], name=team['name'], number=team['number'])
+            t, _ = models.Team.get_or_create(id=team['id'], name=team['name'], number=team['number'],
+                                             domain=team['domain'])
             team_map[team['id']] = t
         models.database_proxy.commit()
 

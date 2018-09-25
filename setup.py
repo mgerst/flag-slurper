@@ -18,6 +18,7 @@ install_requires = [
     'jinja2==2.10',
     'peewee==3.5.0',
     'terminaltables==3.1.0',
+    'dnspython==1.15.0',
 ]
 
 
