@@ -4,10 +4,10 @@ from typing import Tuple
 
 import paramiko
 
+from flag_slurper.autolib.post import PostContext
 from .exploit import find_flags, FlagConf, can_sudo, get_file_contents, get_system_info, LimitCreds
 from .governor import Governor
 from .models import Service, Credential, Flag, CaptureNote
-from .post import post_ssh
 from .utils import limited_credentials
 
 logger = logging.getLogger(__name__)
@@ -20,13 +20,16 @@ def _get_ssh_client():
 
 
 def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf,
-            limit_creds: LimitCreds) -> Tuple[str, bool, bool]:
+            limit_creds: LimitCreds, context: PostContext) -> Tuple[str, bool, bool]:
     ssh = _get_ssh_client()
-    base_dir = flag_conf['location'] if flag_conf else None
-    enable_search = flag_conf['search'] if flag_conf else True
 
     working = set()
     credentials = limited_credentials(limit_creds)
+    context.update({
+        'ssh': ssh,
+        'credentials': credentials,
+    })
+
     for credential in credentials:
         # Govern if necessary (and enabled)
         gov = Governor.get_instance()
@@ -58,26 +61,26 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf,
                 if sudo:
                     sysinfo += "\nUsed Sudo"
 
-                flag_obj, _ = Flag.get_or_create(team=service.team, name=flag_conf['name'])
+                for flag in flag_conf:
+                    base_dir = flag['location']
+                    enable_search = flag['search']
+                    flag_obj, _ = Flag.get_or_create(team=service.team, name=flag['name'])
 
-                if flag_conf:
-                    location = flag_conf['name']
-                    full_location = os.path.join(base_dir, location)
-                    sudo_cred = credential.password if sudo else None
-                    flag = get_file_contents(ssh, full_location, sudo=sudo_cred)
-                    if flag:
-                        enable_search = False
-                        note, created = CaptureNote.get_or_create(flag=flag_obj, data=flag, location=full_location,
-                                                                  notes=str(sysinfo), service=service)
+                    if flag_conf:
+                        location = flag['name']
+                        full_location = os.path.join(base_dir, location)
+                        sudo_cred = credential.password if sudo else None
+                        flag = get_file_contents(ssh, full_location, sudo=sudo_cred)
+                        if flag:
+                            enable_search = False
+                            CaptureNote.get_or_create(flag=flag_obj, data=flag, location=full_location,
+                                                      notes=str(sysinfo), service=service)
 
-                if enable_search:
-                    flags = find_flags(ssh, base_dir=base_dir)
-                    for flag in flags:
-                        CaptureNote.get_or_create(flag=flag_obj, data=flag[1], location=flag[0], notes=str(sysinfo),
-                                                  searched=True, service=service)
-
-                if cred.state == Credential.WORKS:
-                    post_ssh(ssh, cred)
+                    if enable_search:
+                        local_flags = find_flags(ssh, base_dir=base_dir)
+                        for local_flag in local_flags:
+                            CaptureNote.get_or_create(flag=flag_obj, data=local_flag[1], location=local_flag[0],
+                                                      notes=str(sysinfo), searched=True, service=service)
         except paramiko.ssh_exception.AuthenticationException:
             continue
         except Exception:

