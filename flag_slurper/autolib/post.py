@@ -211,7 +211,7 @@ class PluginRegistry:
                 raise KeyError('Unknown plugin: {}'.format(name))
 
             plugin = self.registry[name]
-            plugin.configure(config[name])
+            plugin.configure(command[name])
             self.run_plugins.append(name)
 
     def post(self, service: Service, context: PostContext) -> bool:
