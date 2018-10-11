@@ -1,6 +1,5 @@
 import os
 from setuptools import setup, find_packages
-
 from flag_slurper import __version__
 
 ROOT = os.path.dirname(__file__)
@@ -18,6 +17,7 @@ install_requires = [
     'jinja2==2.10',
     'peewee==3.5.0',
     'terminaltables==3.1.0',
+    'dnspython==1.15.0',
 ]
 
 
@@ -40,10 +40,15 @@ docs_require = [
     'sphinx_rtd_theme',
 ]
 
+dev_requires = [
+    'bumpversion==0.5.3',
+    'twine==1.10.0',
+]
+
 
 setup(
     name='flag_slurper',
-    version=__version__,
+    version='0.5.0',
     description='Tool for getting flags from CDC machines',
     long_description=read('README.md'),
     author='Matt Gerst',
@@ -65,6 +70,7 @@ setup(
         ],
         'tests': tests_require,
         'docs': docs_require,
+        'dev': dev_requires,
     },
 
     classifiers=[

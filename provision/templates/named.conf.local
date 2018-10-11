@@ -1,0 +1,15 @@
+include "/etc/bind/zones.rfc1918";
+
+acl internals {
+    127.0.0.0/8;
+    ::1/128;
+};
+
+controls {
+    inet 127.0.0.1 port 953 allow { internals; };
+};
+
+zone "team1.isucdc.com" {
+    type master;
+    file "/etc/bind/db.team1.isucdc.com.conf";
+};

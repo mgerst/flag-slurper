@@ -25,12 +25,13 @@ def team(ctx):
 @team.command()
 @click.argument('name')
 @click.argument('number')
-def add(name, number):
+@click.argument('domain')
+def add(name, number, domain):
     """
     Add team.
     """
     with database_proxy.obj:
-        Team.create(id=number, name=name, number=number)
+        Team.create(id=number, name=name, number=number, domain=domain)
         click.secho("Team added.", fg='green')
 
 
@@ -52,8 +53,8 @@ def ls():
     """
     with database_proxy.obj:
         teams = Team.select()
-        teamdata = [[t.number, t.name] for t in teams]
-        teamdata.insert(0, ['Number', 'Name'])
+        teamdata = [[t.number, t.name, t.domain] for t in teams]
+        teamdata.insert(0, ['Number', 'Name', 'Domain'])
         table = AsciiTable(teamdata)
         utils.conditional_page(table.table, len(teamdata))
 
@@ -65,6 +66,7 @@ def show(team_number):
     click.echo("Id: {}".format(t.id))
     click.echo("Number: {}".format(t.number))
     click.echo("Name: {}".format(t.name))
+    click.echo("Domain: {}".format(t.domain))
 
     services = [[s.id, s.service_name, s.service_port, s.service_url] for s in t.services]
     services.insert(0, ['ID', 'Name', 'Port', 'URL'])

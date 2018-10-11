@@ -8,7 +8,7 @@ from flag_slurper.autolib import models
 from flag_slurper.config import Config
 
 MODELS = [models.Service, models.Credential, models.CredentialBag, models.Team, models.Flag, models.CaptureNote,
-          models.File]
+          models.File, models.DNSResult]
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ def db():
 
 @pytest.fixture
 def team(db):
-    yield models.Team.create(id=1, name='CDC Team 1', number=1)
+    yield models.Team.create(id=1, name='CDC Team 1', number=1, domain='team1.isucdc.com')
 
 
 @pytest.fixture
