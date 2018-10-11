@@ -28,6 +28,12 @@ project_schema_v1_0 = Schema({
             'search': bool,
         }
     ]),
+    Optional('post', default=[]): Schema([
+        {
+            'service': str,
+            'commands': Schema([dict]),
+        }
+    ]),
 })
 
 project_schema = project_schema_v1_0
@@ -151,6 +157,18 @@ class Project:
             flag['name'] = tmpl.render(num=team.number)
             flags.append(flag)
         return flags
+
+    def post(self, service: models.Service) -> tp.List[dict]:
+        """
+        Get the post pwn configuration for a given service.
+
+        :param service: The service we are attempting to pwn.
+        :return: The configuration for that service.
+        """
+        for service_data in self.project_data['post']:
+            if service.service_name == service_data['service']:
+                return service_data['commands']
+        return []
 
     def connect_database(self):
         conf = Config.get_instance()

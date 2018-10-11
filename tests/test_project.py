@@ -382,6 +382,37 @@ def test_project_without_flag(basic_project):
     assert basic_project.flag(1) == []
 
 
+def test_project_without_post(basic_project, service):
+    assert basic_project.post(service) == []
+
+def test_project_post_command(create_project, service):
+    tmpdir = create_project("""
+    _version: "1.0"
+    project: ISU2-18
+    base: {dir}/isu2-18
+    post:
+      - service: WWW HTTP
+        commands:
+          - ssh_exfil:
+              files:
+                - /etc/testfile
+          
+    """)
+    p = Project.get_instance()
+    p.load(str(tmpdir.join('project.yml')))
+
+    service_data = p.post(service)
+    assert service_data == [
+        {
+            'ssh_exfil': {
+                'files': [
+                    '/etc/testfile',
+                ],
+            },
+        },
+    ]
+
+
 class TestCli:
     def test_project_init(self, tmpdir):
         runner = CliRunner()

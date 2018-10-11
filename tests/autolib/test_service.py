@@ -1,7 +1,23 @@
 from copy import deepcopy
 
+import pytest
+
 from flag_slurper.autolib.service import Service, Result, coerce_service, detect_service, pwn_service
 from flag_slurper.autolib.protocols import PWN_FUNCS
+from flag_slurper.project import Project
+
+
+@pytest.fixture
+def project(create_project):
+    tmpdir = create_project("""
+    ---
+    _version: "1.0"
+    project: IUS2-18
+    base: {dir}/isu2-18
+    """)
+    project = Project.get_instance()
+    project.load(str(tmpdir.join('project.yml')))
+    yield project
 
 
 class TestResult:
@@ -45,31 +61,31 @@ def test_detect_unknown_service(invalid_service):
     assert data[2] == 10391
 
 
-def test_pwn_invalid_service(invalid_service):
-    res = pwn_service(invalid_service, None, None)
+def test_pwn_invalid_service(invalid_service, project):
+    res = pwn_service(invalid_service, None, None, project.post(invalid_service))
     assert not res.success
     assert res.skipped
     assert res.message == "Protocol not supported for autopwn"
 
 
-def test_pwn_service(service, mocker):
+def test_pwn_service(service, mocker, project):
     pwn_http = mocker.MagicMock()
     pwn_http.return_value = "service up", True, False
 
     PWN_FUNCS['http'] = pwn_http
-    res = pwn_service(service, None, None)
+    res = pwn_service(service, None, None, project.post(service))
 
     result = Result(service, "service up", success=True, skipped=False)
     assert result == res
     assert pwn_http.called
 
 
-def test_pwn_flag_conf(service, mocker):
+def test_pwn_flag_conf(service, mocker, project):
     pwn_http = mocker.MagicMock()
     pwn_http.return_value = "service up", True, False
 
     PWN_FUNCS['http'] = pwn_http
-    res = pwn_service(service, {}, None)
+    res = pwn_service(service, [], None, project.post(service))
 
     result = Result(service, "service up", success=True, skipped=False)
     assert result == res
