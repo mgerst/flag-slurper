@@ -142,7 +142,7 @@ class PostPlugin(ABC):
         :raises ValueError: if the context schema has not been set
         """
         if self.context_schema is None:
-            raise ValueError('The config_schema for {} has not been configured'.format(self.name))
+            raise ValueError('The context_schema for {} has not been configured'.format(self.name))
         context.validate(self.context_schema)
         return True
 
