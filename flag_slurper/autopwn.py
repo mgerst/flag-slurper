@@ -33,7 +33,6 @@ def _pwn_service(limit_creds, service):
     utils.report_status("Checking team: {} ({})".format(team.number, team.name))
     flags = p.flag(team)
     flag = list(filter(lambda x: x['service'] == service.service_name, flags))
-    flag = flag[0] if len(flag) == 1 else []
     logger.debug("pwning %d", team.number)
     result = autolib.pwn_service(service, flag, limit_creds, config)
     logger.debug("pwned %d", team.number)
