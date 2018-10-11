@@ -2,6 +2,7 @@ import pytest
 import responses
 from click.testing import CliRunner
 
+from flag_slurper import __version__
 from flag_slurper.cli import cli, pass_conf
 from flag_slurper.config import Config
 from flag_slurper.project import Project
@@ -35,7 +36,7 @@ def test_cli_version():
     runner = CliRunner()
     result = runner.invoke(cli, ['--version'])
     assert result.exit_code == 0
-    assert result.output == "flag-slurper, version 0.5\n"
+    assert result.output == "flag-slurper, version {}\n".format(__version__)
 
 
 def test_cli_pass_config():
