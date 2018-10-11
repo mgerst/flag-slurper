@@ -310,7 +310,7 @@ class SSHFileExfil(PostPlugin):
         return True
 
     def predicate(self, service: Service, context: PostContext) -> bool:
-        return service.service_port
+        return service.service_port == 22
 
 
 registry = PluginRegistry()
