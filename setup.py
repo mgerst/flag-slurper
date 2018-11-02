@@ -10,7 +10,7 @@ def read(fname):
 
 
 install_requires = [
-    'requests==2.18.4',
+    'requests>=2.20.0',
     'click==6.7',
     'pyyaml==3.12',
     'schema==0.6.7',
@@ -48,7 +48,7 @@ dev_requires = [
 
 setup(
     name='flag_slurper',
-    version='0.6.0',
+    version='0.6.1',
     description='Tool for getting flags from CDC machines',
     long_description=read('README.md'),
     author='Matt Gerst',
