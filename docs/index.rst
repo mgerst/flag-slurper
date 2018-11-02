@@ -7,10 +7,14 @@ as well as functionality for tracking obtained credentials, files, and most impo
 .. toctree::
    :maxdepth: 2
 
-   autopwn
    projects
    terms
 
+.. toctree::
+   :caption: Auto PWN
+
+   autopwn/overview
+   autopwn/post
 
 
 Indices and tables

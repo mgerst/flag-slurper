@@ -27,8 +27,8 @@ from .models import Credential, File
 
 logger = logging.getLogger(__name__)
 
-# Sensitive files to find on systems. Paths
-# ending in / are directories.
+#: Sensitive files to find on systems. Paths
+#: ending in / are directories.
 SENSITIVE_FILES = [
     # Authentication
     '/etc/passwd',
@@ -222,6 +222,21 @@ class PluginRegistry:
 
 
 class SSHFileExfil(PostPlugin):
+    """
+    The ``ssh_exfil`` plugin attempt to find as many ``SENSITIVE_FILES`` as possible.
+
+    This plugin takes some optional parameters:
+
+    ``files``: List[str]
+        A list of files to look for. All entries ending with a ``/`` are considered directories
+        and will be searched.
+
+    ``merge_files``: Boolean
+        Set to ``True`` if you want to merge ``files`` with ``SENSITIVE_FILES``, otherwise
+        only ``files`` will be searched.
+
+    This plugin will run automatically for all services using port 22.
+    """
     name = 'ssh_exfil'
     schema = {
         Optional('files', default=[]): [str],
