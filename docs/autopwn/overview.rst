@@ -1,4 +1,4 @@
-Auto PWN
+Overview
 ========
 Flag Slurper contains a utility for automatically attempting default credentails against teams' SSH hosts. This works by
 grabbing the team list from :term:`IScorE` and a list of all the services. The default credentails it uses are:

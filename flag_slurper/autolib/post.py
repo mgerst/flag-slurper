@@ -27,8 +27,8 @@ from .models import Credential, File
 
 logger = logging.getLogger(__name__)
 
-# Sensitive files to find on systems. Paths
-# ending in / are directories.
+#: Sensitive files to find on systems. Paths
+#: ending in / are directories.
 SENSITIVE_FILES = [
     # Authentication
     '/etc/passwd',
@@ -195,7 +195,8 @@ class PluginRegistry:
 
         :param config: The post config for the current service.
         :raises KeyError: When a command is specified that doesn't exist.
-        :raises ValueError:
+        :raises ValueError: When more than one key in a command entry.
+        :raises ValueError: When a command uses an unknown plugin.
         """
 
         # Unconfigure all plugins from a previous run
@@ -215,6 +216,14 @@ class PluginRegistry:
             self.run_plugins.append(name)
 
     def post(self, service: Service, context: PostContext) -> bool:
+        """
+        Runs applicable post pwn plugins against the given service,
+        with the given context.
+
+        :param service: The service to post pwn
+        :param context: The context for the server
+        :return: Whether all post invocation were successful
+        """
         results = [plugin.run(service, context)
                    for plugin in self.registry.values()
                    if plugin.name in self.run_plugins or plugin.predicate(service, context)]
@@ -222,6 +231,21 @@ class PluginRegistry:
 
 
 class SSHFileExfil(PostPlugin):
+    """
+    The ``ssh_exfil`` plugin attempt to find as many ``SENSITIVE_FILES`` as possible.
+
+    This plugin takes some optional parameters:
+
+    ``files``: List[str]
+        A list of files to look for. All entries ending with a ``/`` are considered directories
+        and will be searched.
+
+    ``merge_files``: Boolean
+        Set to ``True`` if you want to merge ``files`` with ``SENSITIVE_FILES``, otherwise
+        only ``files`` will be searched.
+
+    This plugin will run automatically for all services using port 22.
+    """
     name = 'ssh_exfil'
     schema = {
         Optional('files', default=[]): [str],
@@ -232,7 +256,7 @@ class SSHFileExfil(PostPlugin):
         'credentials': object,
     }
 
-    def run(self, service: Service, context: PostContext) -> bool:
+    def run(self, service: Service, context: PostContext):
         super().run(service, context)
         logger.debug('Running post ssh exfil')
         if not self.config:
