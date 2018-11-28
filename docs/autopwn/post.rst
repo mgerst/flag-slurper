@@ -52,3 +52,9 @@ actions that are necessary for your targets. To write a plugin, you must subclas
 
 .. autoclass:: flag_slurper.autolib.post.PluginRegistry
    :members:
+
+Loading Custom Plugins
+----------------------
+Currently, post pwn plugins do not have an auto-loading method (i.e. entry points). In order to
+load a custom plugins, you must manually call :py:func:`~flag_slurper.autolib.post.PluginRegistry.register`
+after ensuring your plugin is on the ``PYTHONPATH``. A much better method is planned.
