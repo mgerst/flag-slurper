@@ -100,7 +100,8 @@ def pwn(verbose, parallel, processes, limit_creds):
 
 
 @autopwn.command()
-def generate():
+@click.option('-r', '--reconcile', is_flag=True, help='Remove teams that do not exist in IScorE')
+def generate(reconcile):
     p = Project.get_instance()
     p.connect_database()
     if not p.enabled:
@@ -109,23 +110,27 @@ def generate():
 
     teams = utils.get_teams()
 
-    team_map = {}
+    if reconcile:
+        ids = [t['id'] for t in teams]
+        old_teams = models.Team.select().where(~models.Team.id << ids)
+        if old_teams.count() > 0:
+            utils.report_status("Reconciling {} team(s)".format(old_teams.count()))
+            map(lambda x: x.delete_instance(), old_teams)
+
     with models.database_proxy.obj:
         for team in teams:
             t, _ = models.Team.get_or_create(id=team['id'], name=team['name'], number=team['number'],
-                                             domain=team['domain'])
-            team_map[team['id']] = t
+                                             domain=team['team_url'])
         models.database_proxy.commit()
 
     # TODO: When /services.json gets fixed, use get_services()
     service_status = utils.get_service_status()
     for status in service_status:
-        t = team_map[status['team_id']]
+        service = utils.get_service(status['service_name'])
+        service_url = service['url'].format(num=status['team_number'])
         st, _ = models.Service.get_or_create(remote_id=status['id'], service_id=status['service_id'],
-                                             service_name=status['service_name'], service_port=status['service_port'],
-                                             service_url=status['service_url'], admin_status=status['admin_status'],
-                                             high_target=status['high_target'], low_target=status['low_target'],
-                                             is_rand=status['is_rand'], team=t)
+                                             service_name=status['service_name'], service_port=service['port'],
+                                             service_url=service_url, team_id=status['team_id'])
 
 
 @autopwn.command()

@@ -110,11 +110,14 @@ def create():  # pragma: no cover
 
 
 def delete():  # pragma: no cover
-    CredentialBag.delete().execute()
-    Team.delete().execute()
-    Service.delete().execute()
-    Credential.delete().execute()
-    Flag.delete().execute()
-    CaptureNote.delete().execute()
-    File.delete().execute()
-    DNSResult.delete().execute()
+    def _del_instance(x):
+        x.delete_instance().execute()
+
+    list(map(_del_instance, CredentialBag.select()))
+    list(map(_del_instance, Team.select()))
+    list(map(_del_instance, Service.select()))
+    list(map(_del_instance, Credential.select()))
+    list(map(_del_instance, Flag.select()))
+    list(map(_del_instance, CaptureNote.select()))
+    list(map(_del_instance, File.select()))
+    list(map(_del_instance, DNSResult.select()))
