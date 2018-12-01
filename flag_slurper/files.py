@@ -22,7 +22,9 @@ def files(ctx):
 
 @files.command()
 @click.option('-t', '--team', type=click.INT, help="Filter by team number", default=None)
-def ls(team):
+@click.option('-n', '--name', type=click.STRING, help="Filter by filename", default=None)
+@click.option('-s', '--service', type=click.STRING, help="Filter by service name", default=None)
+def ls(team, name, service):
     """
     List all files found by autopwn.
     """
@@ -32,8 +34,14 @@ def ls(team):
         if team:
             files = files.where(File.service.team.number == team)
 
+        if name:
+            files = files.where(File.path.contains(name))
+
+        if service:
+            files = files.where(File.service.service_name.contains(service))
+
         if files.count() == 0:
-            utils.report_warning("No files found for team {}".format(team))
+            utils.report_warning("No files found")
             exit(1)
 
         data = [[f.id, f.path, f.info, f.service.team.number, f.service.service_name] for f in files]
