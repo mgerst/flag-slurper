@@ -1,6 +1,6 @@
 from typing import Tuple, Dict, Any, Optional, List
 
-from flag_slurper.autolib.post import PostContext
+from flag_slurper.autolib.plugins import PluginContext
 from .exploit import FlagConf
 from .models import Service
 from .protocols import PWN_FUNCS
@@ -60,7 +60,7 @@ def pwn_service(service: Service, flag_conf: Optional[FlagConf], limit_creds: Op
     if proto not in PWN_FUNCS:
         return Result(service=service, message="Protocol not supported for autopwn", success=False, skipped=True)
 
-    context = PostContext()
+    context = PluginContext()
     message, success, skipped = PWN_FUNCS[proto](url, port, service, flag_conf, limit_creds, context)
     registry.post(service, context)
     return Result(service=service, message=message, success=success, skipped=skipped)

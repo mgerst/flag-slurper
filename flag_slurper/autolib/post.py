@@ -22,6 +22,7 @@ import paramiko
 from schema import Schema, Optional
 
 from flag_slurper.autolib import Service
+from .plugins import Plugin, PluginContext, PluginRegistry
 from .exploit import get_directory, get_file, run_command, run_sudo, expand_wildcard
 from .models import Credential, File
 
@@ -51,28 +52,7 @@ SENSITIVE_FILES = [
 ]
 
 
-class PostContext(dict):
-    """
-    A wrapper method for passing post pwn methods arbitrary data.
-
-    This allows pwn functions to pass whatever arbitrary data they
-    need onto the post plugins in an extensible way.
-    """
-
-    def validate(self, schema: dict) -> 'PostContext':
-        """
-        Allow a plugin to enforce their own schema for
-        their context data. The ``Schema`` object is
-        created by the context, not the plugin.
-
-        :param schema: A dictionary containing the schema
-        :return: Returns the context for chaining
-        """
-        Schema(schema, ignore_extra_keys=True).validate(self)
-        return self
-
-
-class PostPlugin(ABC):
+class PostPlugin(Plugin):
     """
     Defines a post pwn plugin.
 
@@ -89,145 +69,17 @@ class PostPlugin(ABC):
               - <post plugin name>:
                   <arguments>
     """
-
-    name = None
-    schema = None
-    context_schema = None
-    config = None
-
-    def configure(self, config: dict) -> dict:
-        """
-        Configure the plugin.
-
-        This provides the base configuration implementation. It
-        simply just validates the schema against the given config.
-        Plugins that need more involved configuration may override
-        this method.
-
-        Plugins must define their own schema by overriding the
-        ``schema`` class variable.
+    type = 'post'
 
 
-        :param config:
-        :return:
-        """
-        if not self.schema:
-            raise ValueError('The schema for {} has not been configured'.format(self.name))
-        config = Schema(self.schema).validate(config)
-        self.config = config
-        logger.info('Configuring plugin: %s', self.config)
-        return config
-
-    def unconfigure(self):
-        """
-        Remove any previous configuration.
-
-        This is used between post exploits.
-        """
-        self.config = None
-
-    @abstractmethod
-    def run(self, service: Service, context: PostContext) -> bool:
-        """
-        Run the post pwn plugin.
-
-        This is where the plugin will perform any actions it needs. All
-        run methods MUST call their super before accessing the given
-        context, otherwise it must attempt to safely access context
-        entries.
-
-        :param service: The service we are currently attacking
-        :param context: The context given to the post plugin
-        :returns: True if successful, False otherwise
-        :raises ValueError: if the context schema has not been set
-        """
-        if self.context_schema is None:
-            raise ValueError('The context_schema for {} has not been configured'.format(self.name))
-        context.validate(self.context_schema)
-        return True
-
-    @abstractmethod
-    def predicate(self, service: Service, context: PostContext) -> bool:
-        """
-        Determines whether the plugin should be run for the given service,
-        context, and configuration. The plugin's configuration will have
-        been validated at this point.
-
-        :param service: The current service to test against
-        :param context: The current post context
-        :return: True if this plugin should run, False otherwise
-        """
-        raise NotImplementedError
-
-
-class PluginRegistry:
+class PostPluginRegistry(PluginRegistry):
     """
     The post pwn plugin registry.
 
     This handles configuring and figuring out which plugins will
     need to be run.
     """
-    def __init__(self):
-        self.registry: Dict[str, PostPlugin] = {}
-
-    def register(self, plugin: Type[PostPlugin]):
-        """
-        Register a plugin with the plugin registry.
-
-        :param plugin: The plugin class to register.
-        :raises ValueError: If the plugin does not subclass :py:class:`PostPlugin`.
-        :raises ValueError: If the plugin name is already taken.
-        """
-        if not issubclass(plugin, PostPlugin):
-            raise ValueError('Plugins must extend PostPlugin')
-        if plugin.name in self.registry:
-            raise ValueError('Plugin already registered by this name: {}'.format(plugin.name))
-        self.registry[plugin.name] = plugin()
-
-        # The plugins that will be used for the current run
-        self.run_plugins = []
-
-    def configure(self, config: List[dict]):
-        """
-        Configure the plugins that will be used for this run.
-
-        This will accept the ``commands`` section for the current service.
-
-        :param config: The post config for the current service.
-        :raises KeyError: When a command is specified that doesn't exist.
-        :raises ValueError: When more than one key in a command entry.
-        :raises ValueError: When a command uses an unknown plugin.
-        """
-
-        # Unconfigure all plugins from a previous run
-        list(map(PostPlugin.unconfigure, self.registry.values()))
-        self.run_plugins = []
-
-        # Configure used plugins for
-        for command in config:
-            if len(command.keys()) != 1:
-                raise ValueError('Each commands entry should have exactly one key')
-            name = list(command.keys())[0]
-            if name not in self.registry:
-                raise KeyError('Unknown plugin: {}'.format(name))
-
-            plugin = self.registry[name]
-            plugin.configure(command[name])
-            self.run_plugins.append(name)
-
-    def post(self, service: Service, context: PostContext) -> bool:
-        """
-        Runs applicable post pwn plugins against the given service,
-        with the given context.
-
-        :param service: The service to post pwn
-        :param context: The context for the server
-        :return: Whether all post invocation were successful
-        """
-        results = [plugin.run(service, context)
-                   for plugin in self.registry.values()
-                   if plugin.name in self.run_plugins or plugin.predicate(service, context)]
-        return all(results)
+    type = 'post'
 
 
 class SSHFileExfil(PostPlugin):
@@ -256,7 +108,7 @@ class SSHFileExfil(PostPlugin):
         'credentials': object,
     }
 
-    def run(self, service: Service, context: PostContext):
+    def run(self, service: Service, context: PluginContext):
         super().run(service, context)
         logger.debug('Running post ssh exfil')
         if not self.config:
@@ -333,9 +185,9 @@ class SSHFileExfil(PostPlugin):
                     return False
         return True
 
-    def predicate(self, service: Service, context: PostContext) -> bool:
+    def predicate(self, service: Service, context: PluginContext) -> bool:
         return service.service_port == 22
 
 
-registry = PluginRegistry()
+registry = PostPluginRegistry()
 registry.register(SSHFileExfil)

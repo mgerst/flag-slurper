@@ -13,10 +13,10 @@ class TestPlugin(post.PostPlugin):
     }
     context_schema = {}
 
-    def run(self, service: post.Service, context: post.PostContext):
+    def run(self, service: post.Service, context: post.PluginContext):
         super().run(service, context)
 
-    def predicate(self, service: post.Service, context: post.PostContext):
+    def predicate(self, service: post.Service, context: post.PluginContext):
         return True
 
 
@@ -28,7 +28,7 @@ def test_plugin_registered():
 
 def test_register_non_subclass():
     pm = post.PluginRegistry()
-    with pytest.raises(ValueError, match='Plugins must extend PostPlugin'):
+    with pytest.raises(ValueError, match='Plugins must extend Plugin'):
         pm.register(object)
 
 
@@ -41,12 +41,12 @@ def test_register_duplicate_plugin():
 
 
 def test_context_validation_success():
-    context = post.PostContext(foo='bar')
+    context = post.PluginContext(foo='bar')
     context.validate({'foo': str})
 
 
 def test_context_validation_error():
-    context = post.PostContext(foo='bar')
+    context = post.PluginContext(foo='bar')
 
     with pytest.raises(SchemaError):
         context.validate({'foo': int})
@@ -75,12 +75,12 @@ def test_plugin_run(service):
             super().__init__(*args, **kwargs)
             self.ran = True
 
-        def run(self, service: post.Service, context: post.PostContext):
+        def run(self, service: post.Service, context: post.PluginContext):
             super().run(service, context)
             self.ran = True
     pm = post.PluginRegistry()
     pm.register(Test2)
-    pm.post(service, post.PostContext())
+    pm.post(service, post.PluginContext())
 
 
 def test_plugin_non_configured():
@@ -116,12 +116,12 @@ def test_registry_non_registered_plugin():
 def test_ssh_plugin_predicate_accepts(service):
     plugin = post.SSHFileExfil()
     service.service_port = 22
-    assert plugin.predicate(service, post.PostContext())
+    assert plugin.predicate(service, post.PluginContext())
 
 
 def test_ssh_plugin_predicate_rejects(service):
     plugin = post.SSHFileExfil()
-    assert not plugin.predicate(service, post.PostContext())
+    assert not plugin.predicate(service, post.PluginContext())
 
 
 def test_ssh_plugin_run(service, mock, sudobag, sudocred):
@@ -137,7 +137,7 @@ def test_ssh_plugin_run(service, mock, sudobag, sudocred):
     run_sudo.return_value = [StringIO(), BytesIO(b""), BytesIO()]
 
     ssh.exec_command.return_value = [StringIO(), BytesIO(b""), BytesIO()]
-    context = post.PostContext(ssh=ssh, credentials=[sudocred.bag])
+    context = post.PluginContext(ssh=ssh, credentials=[sudocred.bag])
 
     plugin = post.SSHFileExfil()
     plugin.run(service, context)

@@ -2,15 +2,15 @@ import logging
 import os
 from typing import Tuple
 
-import paramiko
 import dns.query
 import dns.zone
+import paramiko
 from dns.exception import DNSException
 
-from flag_slurper.autolib.post import PostContext
 from .exploit import find_flags, FlagConf, can_sudo, get_file_contents, get_system_info, LimitCreds
 from .governor import Governor
-from .models import Service, Credential, Flag, CaptureNote
+from .models import Service, Credential, Flag, CaptureNote, DNSResult
+from .plugins import PluginContext
 from .utils import limited_credentials
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ def _get_ssh_client():
 
 
 def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf,
-            limit_creds: LimitCreds, context: PostContext) -> Tuple[str, bool, bool]:
+            limit_creds: LimitCreds, context: PluginContext) -> Tuple[str, bool, bool]:
     ssh = _get_ssh_client()
 
     working = set()
@@ -96,7 +96,7 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf,
 
 
 def pwn_dns(url: str, port: int, service: Service, flag_conf: FlagConf,
-            limit_creds: LimitCreds) -> Tuple[str, bool, bool]:
+            limit_creds: LimitCreds, context: PluginContext) -> Tuple[str, bool, bool]:
     try:
         z = dns.zone.from_xfr(dns.query.xfr(url, service.team.domain))
         names = z.nodes.keys()
