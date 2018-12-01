@@ -52,7 +52,21 @@ def test_list_files_team(found_file, files_project):
     runner = CliRunner()
     result = runner.invoke(cli, ['-p', files_project, 'files', 'ls', '-t', '100'])
     assert result.exit_code == 1
-    assert result.output == "[*] No files found for team 100\n"
+    assert result.output == "[*] No files found\n"
+
+
+def test_list_files_by_service(found_file, files_project):
+    runner = CliRunner()
+    result = runner.invoke(cli, ['-p', files_project, 'files', 'ls', '-s', 'DNS'])
+    assert result.exit_code == 1
+    assert result.output == "[*] No files found\n"
+
+
+def test_list_files_by_path(found_file, files_project):
+    runner = CliRunner()
+    result = runner.invoke(cli, ['-p', files_project, 'files', 'ls', '-n', 'fun'])
+    assert result.exit_code == 0
+    assert '/test/fun/file' in result.output
 
 
 def test_show_file(found_file, mock, files_project):

@@ -1,3 +1,5 @@
+.. _autopwn_overview:
+
 Overview
 ========
 Flag Slurper contains a utility for automatically attempting default credentails against teams' SSH hosts. This works by
