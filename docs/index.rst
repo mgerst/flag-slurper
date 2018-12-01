@@ -8,6 +8,7 @@ as well as functionality for tracking obtained credentials, files, and most impo
    :maxdepth: 2
 
    projects
+   files
    terms
 
 .. toctree::
