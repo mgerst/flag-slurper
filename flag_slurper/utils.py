@@ -68,7 +68,7 @@ def save_flags(flags, team=None, base_path=None):
     z.close()
 
 
-def get_teams():
+def get_teams() -> list:
     conf = Config.get_instance()
     url = '{}/teams.json'.format(conf.api_url)
 
@@ -84,14 +84,40 @@ def get_team_map(teams):
 
 
 # TODO: Should be using the /services.json endpoint but it's currently 500'ing
-def get_service_status():
+def get_service_status() -> list:
     conf = Config.get_instance()
     url = '{}/servicestatus.json'.format(conf.api_url)
 
     resp = requests.get(url)
     resp.raise_for_status()
-    resp = resp.json()
-    return resp
+    return resp.json()
+
+
+def get_services() -> list:
+    conf = Config.get_instance()
+    url = '{}/services.json'.format(conf.api_url)
+
+    resp = requests.get(url)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def get_service(name) -> dict:
+    """
+    Get a service by its name.
+
+    .. note::
+
+        The IScorE API changed and the service_id returned by service status
+        cannot be used to find the service. As a temporary workaround, we are
+        matching on service name, which ***should*** be unique.
+
+    :param name: The name of the service
+    :return: The matched service.
+    """
+    if not hasattr(get_service, 'service_cache'):
+        get_service.service_cache = {s['name']: s for s in get_services()}
+    return get_service.service_cache[name]
 
 
 def report_error(msg):
