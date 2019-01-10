@@ -12,7 +12,7 @@ def read(fname):
 install_requires = [
     'requests>=2.20.0',
     'click==6.7',
-    'pyyaml==3.12',
+    'pyyaml>=4.2b1',
     'schema==0.6.7',
     'jinja2==2.10',
     'peewee==3.5.0',
