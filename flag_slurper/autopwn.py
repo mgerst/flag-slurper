@@ -61,7 +61,8 @@ def _print_result(result, verbose):
 @click.option('-N', '--processes', type=click.INT, default=None, help="How manny process to use for async AutoPWN")
 @click.option('-c', '--limit-creds', type=click.STRING, multiple=True, help="Limit the attack to the given creds")
 @click.option('-t', '--team', type=click.INT, default=None, help="Limit the attack to the given team")
-def pwn(verbose, parallel, processes, limit_creds, team):
+@click.option('-s', '--service', type=click.STRING, default=None, help="Limit the attack to the given service name")
+def pwn(verbose, parallel, processes, limit_creds, team, service):
     utils.report_status("Starting AutoPWN")
     p = Project.get_instance()
 
@@ -76,6 +77,10 @@ def pwn(verbose, parallel, processes, limit_creds, team):
     if team:
         utils.report_status('Limited to team {}'.format(team))
         services = services.join(models.Team).where(models.Team.number == team)
+
+    if service:
+        utils.report_status('Limited to service {}'.format(service))
+        services = services.where(models.Service.service_name == service)
 
     if parallel:
         print("Using pool size: {}".format(processes))

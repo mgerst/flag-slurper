@@ -24,3 +24,19 @@ def test_autopwn_no_project():
     result = runner.invoke(cli, ['-np', 'autopwn', 'results'])
     assert result.exit_code == 4
     assert result.output == "[!] AutoPWN commands require an active project\n"
+
+
+def test_autopwn_pwn_limit_team(pwn_project, mocker, service):
+    runner = CliRunner()
+    pwn_service = mocker.patch('flag_slurper.autopwn._pwn_service')
+    result = runner.invoke(cli, ['autopwn', 'pwn', '-t', service.team.number])
+    assert result.exit_code == 0
+    pwn_service.assert_called_with((), service)
+
+
+def test_autopwn_pwn_limit_service(pwn_project, mocker):
+    runner = CliRunner()
+    pwn_service = mocker.patch('flag_slurper.autopwn._pwn_service')
+    result = runner.invoke(cli, ['autopwn', 'pwn', '-s', 'non-existant service'])
+    assert result.exit_code == 0
+    pwn_service.assert_not_called()
