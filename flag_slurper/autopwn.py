@@ -36,7 +36,9 @@ def _pwn_service(limit_creds, service):
     p = Project.get_instance()
     config = p.post(service)
     team = service.team
-    utils.report_status("Checking team: {} ({})".format(team.number, team.name))
+    utils.report_status("Checking {team}/{url}:{port}/{proto}".format(team=team.number, url=service.service_url,
+                                                                      port=service.service_port,
+                                                                      proto=service.service_name))
     flags = p.flag(team)
     flag = list(filter(lambda x: x['service'] == service.service_name, flags))
     logger.debug("pwning %d", team.number)
