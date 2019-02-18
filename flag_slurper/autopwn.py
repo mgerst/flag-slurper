@@ -22,8 +22,14 @@ logger = logging.getLogger(__name__)
 
 
 @click.group()
-def autopwn():
-    pass
+@click.pass_context
+def autopwn(ctx):
+    p = Project.get_instance()
+    if not p.enabled:
+        utils.report_error("AutoPWN commands require an active project")
+        exit(4)
+    p.connect_database()
+    ctx.obj = p
 
 
 def _pwn_service(limit_creds, service):
@@ -52,23 +58,24 @@ def _print_result(result, verbose):
 @autopwn.command()
 @click.option('-v', '--verbose', is_flag=True)
 @click.option('-P', '--parallel', is_flag=True, help="Async AutoPWN attack")
-@click.option('-N', '--processes', type=click.INT, default=None)
-@click.option('-c', '--limit-creds', type=click.STRING, multiple=True)
-def pwn(verbose, parallel, processes, limit_creds):
+@click.option('-N', '--processes', type=click.INT, default=None, help="How manny process to use for async AutoPWN")
+@click.option('-c', '--limit-creds', type=click.STRING, multiple=True, help="Limit the attack to the given creds")
+@click.option('-t', '--team', type=click.INT, default=None, help="Limit the attack to the given team")
+def pwn(verbose, parallel, processes, limit_creds, team):
     utils.report_status("Starting AutoPWN")
     p = Project.get_instance()
 
     if not processes:
         processes = os.cpu_count() + 1
 
-    if not p.enabled:
-        utils.report_error("AutoPwn requires a project be active")
-        return 1
-
     p.connect_database()
     utils.report_status("Loaded project from {}".format(p.base))
 
     services = models.Service.select()
+
+    if team:
+        utils.report_status('Limited to team {}'.format(team))
+        services = services.join(models.Team).where(models.Team.number == team)
 
     if parallel:
         print("Using pool size: {}".format(processes))
@@ -104,10 +111,6 @@ def pwn(verbose, parallel, processes, limit_creds):
 def generate(reconcile):
     p = Project.get_instance()
     p.connect_database()
-    if not p.enabled:
-        utils.report_error("Generate requires a project be active")
-        return 1
-
     teams = utils.get_teams()
 
     if reconcile:
@@ -136,11 +139,6 @@ def generate(reconcile):
 @autopwn.command()
 def results():
     p = Project.get_instance()
-
-    if not p.enabled:
-        utils.report_error("This command requires a project be active")
-        exit(3)
-
     p.connect_database()
 
     utils.report_status("Found the following flags")
