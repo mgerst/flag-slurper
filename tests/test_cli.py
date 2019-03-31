@@ -49,12 +49,14 @@ def test_cli_pass_config():
     runner.invoke(cli, ['cmd'])
 
 
+@responses.activate
 def test_plant_invalid_user(mocker):
     prompt = mocker.patch('flag_slurper.config.prompt')
     prompt.return_value = "ABC"
+    responses.add(responses.GET, 'https://iscore.iseage.org/api/v1/user/show.json', status=200, json=rm.BLUE_USER)
     runner = CliRunner()
     result = runner.invoke(cli, ['plant'])
-    assert result.exit_code == 1
+    assert result.exit_code == 2
 
 
 @responses.activate

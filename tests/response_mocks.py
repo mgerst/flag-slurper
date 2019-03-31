@@ -44,3 +44,14 @@ ADMIN_FLAGS = [
         'data': 'FGHIJ',
     },
 ]
+
+BLUE_USER = {
+    'username': 'blueuser',
+    'first_name': 'Blue',
+    'last_name': 'User',
+    'is_superuser': False,
+    'profile': {
+        'is_red': False,
+        'is_blue': True,
+    }
+}

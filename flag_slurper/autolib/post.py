@@ -48,6 +48,13 @@ SENSITIVE_FILES = [
     '/etc/cron.hourly/',
     '/etc/cron.monthly/',
     '/etc/cron.weekly/',
+
+    # Shell configs and profiles
+    '/etc/skel/',
+    '/etc/**/.bashrc',
+    '/etc/**/.bash_profile',
+    '/etc/**/.zshrc',
+    '/etc/**/.profile'
 ]
 
 
