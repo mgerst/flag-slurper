@@ -14,7 +14,7 @@ install_requires = [
     'click==6.7',
     'pyyaml>=4.2b1',
     'schema==0.6.7',
-    'jinja2==2.10',
+    'jinja2==2.10.1',
     'peewee==3.9.5',
     'terminaltables==3.1.0',
     'dnspython==1.15.0',
