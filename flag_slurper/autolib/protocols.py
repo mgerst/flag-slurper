@@ -77,13 +77,14 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf,
                         if flag:
                             enable_search = False
                             CaptureNote.get_or_create(flag=flag_obj, data=flag, location=full_location,
-                                                      notes=str(sysinfo), service=service)
+                                                      notes=str(sysinfo), service=service, used_creds=sudo_cred)
 
                     if enable_search:
                         local_flags = find_flags(ssh, base_dir=base_dir)
                         for local_flag in local_flags:
                             CaptureNote.get_or_create(flag=flag_obj, data=local_flag[1], location=local_flag[0],
-                                                      notes=str(sysinfo), searched=True, service=service)
+                                                      notes=str(sysinfo), searched=True, service=service,
+                                                      used_creds=cred)
         except paramiko.ssh_exception.AuthenticationException:
             continue
         except Exception:

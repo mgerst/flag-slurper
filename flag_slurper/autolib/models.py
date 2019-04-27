@@ -79,6 +79,7 @@ class CaptureNote(BaseModel):
     location = peewee.CharField(max_length=200)
     notes = peewee.TextField(null=True)
     searched = peewee.BooleanField(default=False)
+    used_creds = peewee.ForeignKeyField(Credential, backref='captures', on_delete='CASCADE', null=True)
 
     def __str__(self):
         flags = ""
