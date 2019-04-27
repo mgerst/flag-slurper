@@ -120,6 +120,7 @@ from .project import project
 from .teams import team
 from .services import service
 from .files import files
+from .notes import notes
 cli.add_command(config)
 cli.add_command(creds)
 cli.add_command(dns)
@@ -127,6 +128,7 @@ cli.add_command(project)
 cli.add_command(team)
 cli.add_command(service)
 cli.add_command(files)
+cli.add_command(notes)
 
 # Feature detect remote functionality
 try:
