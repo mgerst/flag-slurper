@@ -223,7 +223,13 @@ def env(path):
 
 def _default_creds():  # pragma: no cover
     models.CredentialBag.create(username='root', password='cdc')
+    models.CredentialBag.create(username='toor', password='cdc')
     models.CredentialBag.create(username='cdc', password='cdc')
+
+    # Very-open SSH
+    models.CredentialBag.create(username='icanhasshell', password='cdc')
+    models.CredentialBag.create(username='iamgroot', password='cdc')
+    models.CredentialBag.create(username='chris', password='cdc')
 
 
 @project.command()
