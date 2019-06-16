@@ -89,3 +89,32 @@
   handlers:
     - name: reload bind9
       service: name=bind9 state=reloaded
+
+- hosts: smtp
+  become: yes
+  tasks:
+    - name: Install packages
+      apt:
+        name:
+          - mailutils
+          - postfix
+        state: present
+
+    - name: Configure postfix
+      lineinfile:
+        path: /etc/postfix/main.cf
+        regexp: '{{ item.regexp }}'
+        line: '{{ item.line }}'
+      with_items:
+        - regexp: '^mailbox_size_limit ='
+          line: 'mailbox_size_limit = 0'
+        - regep: '^recipient_delimiter ='
+          line: 'recipient_delimiter = +'
+        - regexp: '^inet_interfaces ='
+          line: 'inet_interfaces = all'
+        - regexp: '^mydestination ='
+          line: 'mydestination = $myhostname, localhost.$your_domain, $your_domain'
+      notify: restart postfix
+  handlers:
+    - name: restart postfix
+      service: name=postfix state=restarted

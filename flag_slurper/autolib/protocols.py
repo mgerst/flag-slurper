@@ -1,11 +1,13 @@
 import logging
 import os
+from smtplib import SMTP
 from typing import Tuple
 
-import paramiko
 import dns.query
 import dns.zone
+import paramiko
 from dns.exception import DNSException
+from faker import Faker
 
 from flag_slurper.autolib.post import PostContext
 from .exploit import find_flags, FlagConf, can_sudo, get_file_contents, get_system_info, LimitCreds
@@ -14,6 +16,7 @@ from .models import Service, Credential, Flag, CaptureNote, DNSResult
 from .utils import limited_credentials
 
 logger = logging.getLogger(__name__)
+fake = Faker()
 
 
 def _get_ssh_client():
@@ -113,7 +116,25 @@ def pwn_dns(url: str, port: int, service: Service, flag_conf: FlagConf,
         return 'Got zone {} from AXFR'.format(service.team.domain), True, False
 
 
+def pwn_smtp(url: str, port: int, service: Service, flag_conf: FlagConf,
+             limit_creds: LimitCreds, context: PostContext) -> Tuple[str, bool, bool]:
+    try:
+        with SMTP(url, port=port) as smtp:
+            smtp.helo(fake.hostname())
+            smtp.docmd('MAIL FROM', fake.email())
+            result = smtp.docmd('RCPT TO', fake.email())
+            if result[0] == 250:
+                context['relay'] = True
+                return 'Open Relay detected', True, False
+    except Exception:
+        logger.exception('Failure while detecting open relay')
+        return 'Error while detecting', False, False
+    else:
+        return 'Not an open-relay', False, False
+
+
 PWN_FUNCS = {
     'ssh': pwn_ssh,
     'dns': pwn_dns,
+    'smtp': pwn_smtp,
 }

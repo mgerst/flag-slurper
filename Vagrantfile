@@ -34,6 +34,7 @@ Vagrant.configure("2") do |config|
             }
             ansible.groups = {
                 'dns': ['dns'],
+                'smtp': ['team1']
             }
         end
     end

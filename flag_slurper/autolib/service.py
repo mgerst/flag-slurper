@@ -8,6 +8,7 @@ from .post import registry
 
 SERVICE_MAP = {
     22: 'ssh',
+    25: 'smtp',
     53: 'dns',
     80: 'http',
     443: 'https',

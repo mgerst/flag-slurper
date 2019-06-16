@@ -18,6 +18,7 @@ install_requires = [
     'peewee==3.9.5',
     'terminaltables==3.1.0',
     'dnspython==1.15.0',
+    'Faker==1.0.7',
 ]
 
 
