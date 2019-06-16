@@ -121,8 +121,8 @@ def pwn_smtp(url: str, port: int, service: Service, flag_conf: FlagConf,
     try:
         with SMTP(url, port=port) as smtp:
             smtp.helo(fake.hostname())
-            smtp.docmd('MAIL FROM', fake.email())
-            result = smtp.docmd('RCPT TO', fake.email())
+            smtp.docmd('MAIL FROM:', fake.email())
+            result = smtp.docmd('RCPT TO:', fake.email())
             if result[0] == 250:
                 context['relay'] = True
                 return 'Open Relay detected', True, False

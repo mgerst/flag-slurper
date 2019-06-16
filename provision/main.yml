@@ -108,12 +108,16 @@
       with_items:
         - regexp: '^mailbox_size_limit ='
           line: 'mailbox_size_limit = 0'
-        - regep: '^recipient_delimiter ='
+        - regexp: '^recipient_delimiter ='
           line: 'recipient_delimiter = +'
         - regexp: '^inet_interfaces ='
           line: 'inet_interfaces = all'
         - regexp: '^mydestination ='
-          line: 'mydestination = $myhostname, localhost.$your_domain, $your_domain'
+          line: 'mydestination = $myhostname, localhost.team1.isucdc.com, team1.isucdc.com'
+        - regexp: '^smtpd_recipient_restrictions ='
+          line: 'smtpd_recipient_restrictions ='
+        - regexp: '^mynetworks ='
+          line: 'mynetworks = 0.0.0.0/0'
       notify: restart postfix
   handlers:
     - name: restart postfix
