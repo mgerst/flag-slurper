@@ -50,6 +50,8 @@ class Governor:
         self.limits[ipaddr] = list(filter(_filter, self.limits[ipaddr]))
 
     def attempt(self, ipaddr: str):
+        if not ipaddr:
+            return
         if not self.enabled:
             return
 
@@ -61,4 +63,8 @@ class Governor:
 
     @staticmethod
     def resolve_url(url: str) -> str:
-        return socket.gethostbyname(url)
+        try:
+            return socket.gethostbyname(url)
+        except socket.gaierror:
+            logger.warning("Failed to resolve url: %s", url)
+            return None
