@@ -135,7 +135,9 @@ try:
     import paramiko  # noqa
     from .remote import remote
     from .autopwn import autopwn
+    from .keys import keys
     cli.add_command(remote)
     cli.add_command(autopwn)
+    cli.add_command(keys)
 except ImportError:  # pragma: no cover
     pass

@@ -13,7 +13,7 @@ def found_file(service):
                       service=service)
 
 
-@pytest.fixture()
+@pytest.fixture
 def files_project(create_project):
     tmpdir = create_project("""
     _version: "1.0"
