@@ -49,9 +49,10 @@ dev_requires = [
 
 setup(
     name='flag_slurper',
-    version='0.8.0',
+    version='0.9.0',
     description='Tool for getting flags from CDC machines',
     long_description=read('README.md'),
+    long_description_content_type='text/markdown',
     author='Matt Gerst',
     author_email='mattgerst@gmail.com',
     license='MIT',
