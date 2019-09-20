@@ -52,6 +52,7 @@ setup(
     version='0.9.0',
     description='Tool for getting flags from CDC machines',
     long_description=read('README.md'),
+    long_description_content_type='text/markdown',
     author='Matt Gerst',
     author_email='mattgerst@gmail.com',
     license='MIT',
