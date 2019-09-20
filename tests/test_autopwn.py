@@ -40,3 +40,13 @@ def test_autopwn_pwn_limit_service(pwn_project, mocker):
     result = runner.invoke(cli, ['autopwn', 'pwn', '-s', 'non-existant service'])
     assert result.exit_code == 0
     pwn_service.assert_not_called()
+
+
+def test_autopwn_pwn_random(pwn_project, mocker):
+    runner = CliRunner()
+    mocker.patch('flag_slurper.autopwn._pwn_service')
+    from flag_slurper.autopwn import fn
+    random = mocker.spy(fn, 'Random')
+    result = runner.invoke(cli, ['autopwn', 'pwn', '-r'])
+    assert result.exit_code == 0
+    random.assert_called()

@@ -55,3 +55,8 @@ database and can be viewed like this:
 .. code-block:: bash
 
     flag-slurper autopwn results
+
+.. versionadded:: 0.9.0
+
+    The ``pwn`` command now accepts a ``--random`` or ``-r`` flag to randomize the attack order. This can be set by
+    default in your ``.flagrc`` with the ``autopwn>random`` config.
