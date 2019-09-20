@@ -64,7 +64,7 @@ setup(
     tests_require=tests_require,
     extras_require={
         'remote': [
-            'paramiko==2.4.1',
+            'paramiko==2.6.0',
         ],
         'parallel': [
             'psycopg2-binary==2.7.4',  # You need -binary to get the wheels

@@ -4,8 +4,8 @@ from functools import partial
 from multiprocessing import Pool
 
 import click
+from peewee import fn
 
-from flag_slurper.autolib.governor import Governor
 from flag_slurper.autolib.models import SUDO_FLAG
 from . import utils, autolib
 from .autolib import models
@@ -58,13 +58,15 @@ def _print_result(result, verbose):
 
 
 @autopwn.command()
+@pass_config
 @click.option('-v', '--verbose', is_flag=True)
 @click.option('-P', '--parallel', is_flag=True, help="Async AutoPWN attack")
 @click.option('-N', '--processes', type=click.INT, default=None, help="How manny process to use for async AutoPWN")
 @click.option('-c', '--limit-creds', type=click.STRING, multiple=True, help="Limit the attack to the given creds")
 @click.option('-t', '--team', type=click.INT, default=None, help="Limit the attack to the given team")
 @click.option('-s', '--service', type=click.STRING, default=None, help="Limit the attack to the given service name")
-def pwn(verbose, parallel, processes, limit_creds, team, service):
+@click.option('-r', '--randomize', is_flag=True, help="Randomize autopwn order")
+def pwn(config, verbose, parallel, processes, limit_creds, team, service, randomize):
     utils.report_status("Starting AutoPWN")
     p = Project.get_instance()
 
@@ -83,6 +85,10 @@ def pwn(verbose, parallel, processes, limit_creds, team, service):
     if service:
         utils.report_status('Limited to service {}'.format(service))
         services = services.where(models.Service.service_name == service)
+
+    if randomize or config.getboolean('autopwn', 'random'):
+        utils.report_status('Shuffling services')
+        services = services.order_by(fn.Random())
 
     if parallel:
         print("Using pool size: {}".format(processes))
