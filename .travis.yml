@@ -1,22 +1,50 @@
-sudo: false
 language: python
 cache: pip
 python:
-  - "3.6"
-
-matrix:
-  allow_failures:
-  - python: "3.7"
+  - "3.7"
 
 env:
   - SLURPER_PROJECT=./tests
 
-services:
-  - postgresql
-before_script:
-  - psql -c 'create database slurpertest;' -U postgres
+stages:
+  - lint
+  - test
+  - name: deploy
+    if: tag IS present
 
-install: pip install tox-travis codecov
-script: tox
-after_success:
-  - if [[ "$TOXENV" -eq "py36" ]]; then coverage xml; codecov; fi
+jobs:
+  include:
+    - stage: lint
+      script:
+        - echo "TODO: Lint"
+    - stage: test
+      services:
+        - postgresql
+      before_script:
+        - psql -c 'create database slurpertest;' -U postgres
+      install:
+        - pip install tox-travis codecov
+      script:
+        - tox
+      after_success:
+        - if [[ "$TOXENV" -eq "py37" ]]; then coverage xml; codecov; fi
+    - stage: deploy
+      script:
+        - echo Deploying to PyPI
+
+before_deploy:
+  - pip install --upgrade pip
+  - pip install poetry
+  - poetry config http-basic.pypi $PYPI_USER $PYPI_PASS
+  - poetry build
+
+deploy:
+  provider: script
+  script: poetry publish
+  skip_cleanup: true
+  on:
+    all_branches: true # Travis recognizes tag names as "branches"
+    condition: $TRAVIS_BUILD_STAGE_NAME = Deploy
+    repo: mgerst/flag-slurper
+    tags: true
+
