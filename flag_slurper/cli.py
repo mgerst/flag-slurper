@@ -6,7 +6,7 @@ import pathlib
 from . import __version__
 from . import utils
 from flag_slurper.conf.config import Config
-from .project import Project
+from flag_slurper.conf.project import Project
 
 CONTEXT_SETTINGS = {
     'help_option_names': ['-h', '--help'],

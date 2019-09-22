@@ -1,7 +1,7 @@
 from textwrap import dedent
 
 import pytest
-from peewee import SqliteDatabase, PostgresqlDatabase
+from peewee import PostgresqlDatabase
 from yaml import safe_load
 
 from flag_slurper.autolib import models

@@ -4,7 +4,7 @@ import pytest
 
 from flag_slurper.autolib.service import Service, Result, coerce_service, detect_service, pwn_service
 from flag_slurper.autolib.protocols import PWN_FUNCS
-from flag_slurper.project import Project
+from flag_slurper.conf.project import Project
 
 
 @pytest.fixture

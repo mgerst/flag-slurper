@@ -5,7 +5,7 @@ from click.testing import CliRunner
 from flag_slurper import __version__
 from flag_slurper.cli import cli, pass_conf
 from flag_slurper.conf.config import Config
-from flag_slurper.project import Project
+from flag_slurper.conf.project import Project
 
 from . import response_mocks as rm
 

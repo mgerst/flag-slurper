@@ -1,14 +1,16 @@
 import pickle
 from dataclasses import dataclass
 
+from . import Config, Project
+
 
 @dataclass
-class PwnContext:
+class PwnProcContext:
     """
     All context needed for an autopwn process. Largely consists
     """
-    project: object
-    config: object
+    project: Project
+    config: Config
 
     def serialize(self):
         return pickle.dumps(self)

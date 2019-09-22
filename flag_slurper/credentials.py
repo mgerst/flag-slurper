@@ -2,7 +2,7 @@ import click
 
 from . import utils
 from .autolib.models import database_proxy, CredentialBag
-from .project import Project
+from flag_slurper.conf.project import Project
 
 pass_project = click.make_pass_decorator(Project)
 
