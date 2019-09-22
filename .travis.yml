@@ -16,7 +16,7 @@ jobs:
   include:
     - stage: lint
       script:
-        - echo "TODO: Lint"
+        - "echo 'TODO: Lint'"
     - stage: test
       services:
         - postgresql
