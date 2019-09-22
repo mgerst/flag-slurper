@@ -22,8 +22,8 @@ def test_governor_singleton():
     assert gov.times == 3
 
 
-def test_governor_tracks(mock, governor):
-    sleep = mock.patch('flag_slurper.autolib.governor.time.sleep')
+def test_governor_tracks(mocker, governor):
+    sleep = mocker.patch('flag_slurper.autolib.governor.time.sleep')
     governor.attempt('192.168.1.113')
     assert not sleep.called
 
@@ -37,46 +37,46 @@ def test_governor_filter(governor):
     assert len(governor.limits['192.168.1.113']) == 3
 
 
-def test_governor_limits(mock, governor):
+def test_governor_limits(mocker, governor):
     governor.limits['192.168.1.113'] = [datetime.now() - timedelta(minutes=3),
                                         datetime.now() - timedelta(minutes=29),
                                         datetime.now() - timedelta(minutes=1),
                                         datetime.now() - timedelta(minutes=35)]
-    sleep = mock.patch('flag_slurper.autolib.governor.time.sleep')
+    sleep = mocker.patch('flag_slurper.autolib.governor.time.sleep')
     governor.attempt('192.168.1.113')
     assert sleep.called
 
 
-def test_governer_doesnt_limit_when_disabled(mock):
+def test_governer_doesnt_limit_when_disabled(mocker):
     Governor.instance = None
     governor = Governor.get_instance(False)
     governor.limits['192.168.1.113'] = [datetime.now() - timedelta(minutes=3),
                                         datetime.now() - timedelta(minutes=29),
                                         datetime.now() - timedelta(minutes=1),
                                         datetime.now() - timedelta(minutes=35)]
-    sleep = mock.patch('flag_slurper.autolib.governor.time.sleep')
+    sleep = mocker.patch('flag_slurper.autolib.governor.time.sleep')
     governor.attempt('192.168.1.113')
     assert not sleep.called
 
 
-def test_governor_resolve(mock):
-    addrhost = mock.patch('flag_slurper.autolib.governor.socket.gethostbyname')
+def test_governor_resolve(mocker):
+    addrhost = mocker.patch('flag_slurper.autolib.governor.socket.gethostbyname')
     addrhost.return_value = '192.168.1.113'
     ipaddr = Governor.resolve_url('example.com')
     assert addrhost.called_with('example.com')
     assert ipaddr == '192.168.1.113'
 
 
-def test_governor_resolve_failure(mock):
-    addrhost = mock.patch('flag_slurper.autolib.governor.socket.gethostbyname')
+def test_governor_resolve_failure(mocker):
+    addrhost = mocker.patch('flag_slurper.autolib.governor.socket.gethostbyname')
     addrhost.side_effect = socket.gaierror()
     ipaddr = Governor.resolve_url('invalid.invalid')
     assert addrhost.called_with('invalid.invalid')
     assert ipaddr is None
 
 
-def test_governor_does_not_limit_invalid_ip(mock, governor):
+def test_governor_does_not_limit_invalid_ip(mocker, governor):
     governor.attempt(None)
-    sleep = mock.patch('flag_slurper.autolib.governor.time.sleep')
+    sleep = mocker.patch('flag_slurper.autolib.governor.time.sleep')
     assert len(governor.limits) == 0
     assert not sleep.called
