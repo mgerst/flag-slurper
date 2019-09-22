@@ -60,6 +60,7 @@ class Project:
 
     def __init__(self):
         self.project_data = None
+        self.project_file = None
 
     def load(self, project_file: tp.Union[str, Path]):
         if not isinstance(project_file, Path):
@@ -69,6 +70,7 @@ class Project:
             project_file = project_file / 'project.yml'
 
         project_file = project_file.resolve()
+        self.project_file = project_file
 
         with open(str(project_file), 'r') as fp:
             yaml = safe_load(fp)

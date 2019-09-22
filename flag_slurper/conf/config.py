@@ -32,6 +32,9 @@ class Config(ConfigParser):
 
         conf.configure_governor()
 
+        conf.extra_file = extra
+        conf.noflagrc = noflagrc
+
         cls.instance = conf
         return conf
 
@@ -44,9 +47,9 @@ class Config(ConfigParser):
         gov.times = self.getint('autopwn', 'times')
 
     @staticmethod
-    def get_instance():
+    def get_instance(*args, **kwargs):
         if not Config.instance:
-            Config.load()
+            Config.load(*args, **kwargs)
         return Config.instance
 
     def cond_set(self, section, option, value):
