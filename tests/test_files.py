@@ -69,8 +69,8 @@ def test_list_files_by_path(found_file, files_project):
     assert '/test/fun/file' in result.output
 
 
-def test_show_file(found_file, mock, files_project):
-    edit = mock.patch('flag_slurper.files.click.edit')
+def test_show_file(found_file, mocker, files_project):
+    edit = mocker.patch('flag_slurper.files.click.edit')
     runner = CliRunner()
     result = runner.invoke(cli, ['-p', files_project, 'files', 'show', str(found_file.id)])
     assert result.exit_code == 0

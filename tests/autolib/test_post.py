@@ -124,16 +124,16 @@ def test_ssh_plugin_predicate_rejects(service):
     assert not plugin.predicate(service, post.PostContext())
 
 
-def test_ssh_plugin_run(service, mock, sudobag, sudocred):
+def test_ssh_plugin_run(service, mocker, sudobag, sudocred):
     sudocred.bag.save()
     sudocred.save()
-    ssh = mock.MagicMock()
-    mock.patch('flag_slurper.autolib.post.get_directory')
+    ssh = mocker.MagicMock()
+    mocker.patch('flag_slurper.autolib.post.get_directory')
 
-    validate = mock.patch('flag_slurper.autolib.post.Schema.validate')
+    validate = mocker.patch('flag_slurper.autolib.post.Schema.validate')
     validate.return_value = {}
 
-    run_sudo = mock.patch('flag_slurper.autolib.post.run_sudo')
+    run_sudo = mocker.patch('flag_slurper.autolib.post.run_sudo')
     run_sudo.return_value = [StringIO(), BytesIO(b""), BytesIO()]
 
     ssh.exec_command.return_value = [StringIO(), BytesIO(b""), BytesIO()]
