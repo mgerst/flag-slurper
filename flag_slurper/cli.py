@@ -5,7 +5,7 @@ import pathlib
 
 from . import __version__
 from . import utils
-from .config import Config
+from flag_slurper.conf.config import Config
 from .project import Project
 
 CONTEXT_SETTINGS = {

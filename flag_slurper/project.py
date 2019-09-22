@@ -8,7 +8,7 @@ from jinja2 import Environment
 from schema import Schema, Use, Optional
 from yaml import safe_load
 
-from flag_slurper.config import Config
+from flag_slurper.conf.config import Config
 from . import utils
 from .autolib import models
 

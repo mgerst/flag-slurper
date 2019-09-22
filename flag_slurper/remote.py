@@ -5,7 +5,7 @@ import click
 import paramiko
 
 from . import utils, autolib
-from .config import Config
+from flag_slurper.conf.config import Config
 
 pass_config = click.make_pass_decorator(Config)
 

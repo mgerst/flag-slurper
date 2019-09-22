@@ -9,7 +9,7 @@ from peewee import fn
 from flag_slurper.autolib.models import SUDO_FLAG
 from . import utils, autolib
 from .autolib import models
-from .config import Config
+from flag_slurper.conf.config import Config
 from .project import Project
 
 pass_config = click.make_pass_decorator(Config)

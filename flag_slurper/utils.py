@@ -7,7 +7,7 @@ import string
 import click
 import requests
 
-from .config import Config
+from flag_slurper.conf.config import Config
 from .models import User
 
 

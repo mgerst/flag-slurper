@@ -5,7 +5,7 @@ from peewee import SqliteDatabase, PostgresqlDatabase
 from yaml import safe_load
 
 from flag_slurper.autolib import models
-from flag_slurper.config import Config
+from flag_slurper.conf.config import Config
 
 MODELS = [models.Service, models.Credential, models.CredentialBag, models.Team, models.Flag, models.CaptureNote,
           models.File, models.DNSResult]
