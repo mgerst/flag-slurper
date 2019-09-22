@@ -45,7 +45,7 @@ class TestProjectValidation:
         assert result['_version'] == "1.0"
 
     def test_schema_without_version(self, make_project):
-        with pytest.raises(SchemaMissingKeyError, match="Missing keys: '_version'"):
+        with pytest.raises(SchemaMissingKeyError, match="Missing key: '_version'"):
             project_schema.validate(make_project("""
             ---
             project: test
@@ -56,7 +56,7 @@ class TestProjectValidation:
             """))
 
     def test_schema_missing_project(self, make_project):
-        with pytest.raises(SchemaMissingKeyError, match="Missing keys: 'project'"):
+        with pytest.raises(SchemaMissingKeyError, match="Missing key: 'project'"):
             project_schema.validate(make_project("""
             ---
             _version: "1.0"
@@ -67,7 +67,7 @@ class TestProjectValidation:
             """))
 
     def test_schema_missing_base(self, make_project):
-        with pytest.raises(SchemaMissingKeyError, match="Missing keys: 'base'"):
+        with pytest.raises(SchemaMissingKeyError, match="Missing key: 'base'"):
             project_schema.validate(make_project("""
             ---
             _version: "1.0"
@@ -144,7 +144,7 @@ class TestProjectValidation:
         }]
 
     def test_schema_with_invalid_flags(self, make_project):
-        with pytest.raises(SchemaError, match="Missing keys"):
+        with pytest.raises(SchemaError, match="Missing key"):
             project_schema.validate(make_project("""
             ---
             _version: "1.0"
