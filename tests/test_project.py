@@ -6,6 +6,15 @@ from flag_slurper.cli import cli
 from flag_slurper.conf import Project
 
 
+@pytest.yield_fixture(scope='function', autouse=True)
+def project_manage():
+    """
+    Clear out the Project singleton after each use.
+    """
+    yield
+    Project.instance = None
+
+
 class TestCli:
     def test_project_init(self, tmpdir):
         runner = CliRunner()
@@ -64,24 +73,3 @@ class TestCli:
         assert 'export SLURPER_PROJECT={}'.format(base) in result.output
         assert 'export unslurp' in result.output
         assert 'Set {} as current project.'.format(base) in result.output
-
-
-@pytest.fixture
-def basic_project(create_project):
-    tmpdir = create_project("""
-    _version: "1.0"
-    project: ISU2-18
-    base: {dir}/isu2-18
-    """)
-    p = Project.get_instance()
-    p.load(str(tmpdir.join('project.yml')))
-    return p
-
-
-@pytest.yield_fixture(scope='function', autouse=True)
-def project_manage():
-    """
-    Clear out the Project singleton after each use.
-    """
-    yield
-    Project.instance = None

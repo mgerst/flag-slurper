@@ -5,18 +5,6 @@ from flag_slurper.conf import Project
 from flag_slurper.conf.project import project_schema, detect_version, project_schema_v1_0
 
 
-@pytest.fixture
-def basic_project(create_project):
-    tmpdir = create_project("""
-    _version: "1.0"
-    project: ISU2-18
-    base: {dir}/isu2-18
-    """)
-    p = Project.get_instance()
-    p.load(str(tmpdir.join('project.yml')))
-    return p
-
-
 @pytest.yield_fixture(scope='function', autouse=True)
 def project_manage():
     """
