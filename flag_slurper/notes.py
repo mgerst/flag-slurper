@@ -2,7 +2,7 @@ import click
 from terminaltables import AsciiTable
 
 from .autolib.models import database_proxy, CaptureNote, Service, Team, Flag
-from .project import Project
+from flag_slurper.conf.project import Project
 from . import utils
 
 

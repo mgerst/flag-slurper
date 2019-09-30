@@ -3,7 +3,7 @@ from terminaltables import AsciiTable
 
 
 from .autolib.models import database_proxy, DNSResult, Service, Team
-from .project import Project
+from flag_slurper.conf.project import Project
 from . import utils
 
 

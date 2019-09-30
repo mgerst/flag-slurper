@@ -3,7 +3,7 @@ from terminaltables import AsciiTable
 
 from . import utils
 from .autolib.models import database_proxy, Service, Team
-from .project import Project
+from flag_slurper.conf.project import Project
 
 
 @click.group()

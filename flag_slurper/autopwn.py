@@ -1,16 +1,17 @@
 import logging
 import os
 from functools import partial
-from multiprocessing import Pool
+from multiprocessing import Pool, Manager
 
 import click
 from peewee import fn
 
 from flag_slurper.autolib.models import SUDO_FLAG
+from flag_slurper.conf import context
 from . import utils, autolib
 from .autolib import models
-from .config import Config
-from .project import Project
+from flag_slurper.conf.config import Config
+from flag_slurper.conf.project import Project
 
 pass_config = click.make_pass_decorator(Config)
 
@@ -32,7 +33,9 @@ def autopwn(ctx):
     ctx.obj = p
 
 
-def _pwn_service(limit_creds, service):
+def _pwn_service(limit_creds, service, ctx=None):
+    if ctx:
+        context.deserialize(ctx)
     p = Project.get_instance()
     config = p.post(service)
     team = service.team
@@ -92,8 +95,10 @@ def pwn(config, verbose, parallel, processes, limit_creds, team, service, random
 
     if parallel:
         print("Using pool size: {}".format(processes))
-        with Pool(processes=processes) as pool:
-            pwn_service = partial(_pwn_service, limit_creds)
+        with Manager() as manager, Pool(processes=processes) as pool:
+            ctx = manager.dict()
+            context.serialize(ctx, config, p)
+            pwn_service = partial(_pwn_service, limit_creds, ctx=ctx)
             results = pool.map(pwn_service, services)
 
         for result in results:

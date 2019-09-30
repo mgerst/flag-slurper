@@ -3,7 +3,7 @@ from click.testing import CliRunner
 
 from flag_slurper.autolib.models import DNSResult
 from flag_slurper.cli import cli
-from flag_slurper.project import Project
+from flag_slurper.conf.project import Project
 
 
 @pytest.fixture

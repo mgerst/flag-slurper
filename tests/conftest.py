@@ -1,11 +1,12 @@
 from textwrap import dedent
 
 import pytest
-from peewee import SqliteDatabase, PostgresqlDatabase
+from peewee import PostgresqlDatabase
 from yaml import safe_load
 
 from flag_slurper.autolib import models
-from flag_slurper.config import Config
+from flag_slurper.conf import Project
+from flag_slurper.conf.config import Config
 
 MODELS = [models.Service, models.Credential, models.CredentialBag, models.Team, models.Flag, models.CaptureNote,
           models.File, models.DNSResult]
@@ -71,3 +72,15 @@ def invalid_service(team):
 @pytest.fixture
 def flag(team):
     yield models.Flag.create(id=1, team=team, name='Test Team')
+
+
+@pytest.fixture
+def basic_project(create_project):
+    tmpdir = create_project("""
+    _version: "1.0"
+    project: ISU2-18
+    base: {dir}/isu2-18
+    """)
+    p = Project.get_instance()
+    p.load(str(tmpdir.join('project.yml')))
+    return p

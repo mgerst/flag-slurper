@@ -4,8 +4,8 @@ from click.testing import CliRunner
 
 from flag_slurper import __version__
 from flag_slurper.cli import cli, pass_conf
-from flag_slurper.config import Config
-from flag_slurper.project import Project
+from flag_slurper.conf.config import Config
+from flag_slurper.conf.project import Project
 
 from . import response_mocks as rm
 
@@ -51,7 +51,7 @@ def test_cli_pass_config():
 
 @responses.activate
 def test_plant_invalid_user(mocker):
-    prompt = mocker.patch('flag_slurper.config.prompt')
+    prompt = mocker.patch('flag_slurper.conf.config.prompt')
     prompt.return_value = "ABC"
     responses.add(responses.GET, 'https://iscore.iseage.org/api/v1/user/show.json', status=200, json=rm.BLUE_USER)
     runner = CliRunner()
@@ -61,7 +61,7 @@ def test_plant_invalid_user(mocker):
 
 @responses.activate
 def test_plant(mocker):
-    prompt = mocker.patch('flag_slurper.config.prompt')
+    prompt = mocker.patch('flag_slurper.conf.config.prompt')
     prompt.side_effect = ['ABC', '']
     click = mocker.patch('flag_slurper.cli.click.prompt')
     click.return_value = 0
@@ -78,7 +78,7 @@ def test_plant(mocker):
 
 @responses.activate
 def test_plant_invalid(mocker):
-    prompt = mocker.patch('flag_slurper.config.prompt')
+    prompt = mocker.patch('flag_slurper.conf.config.prompt')
     prompt.side_effect = ['ABC', '']
     click = mocker.patch('flag_slurper.cli.click.prompt')
     click.return_value = 101
@@ -94,7 +94,7 @@ def test_plant_invalid(mocker):
 @responses.activate
 def test_plant_as_admin(mocker):
     # TODO: We might be able to move this boilerplate into a fixture
-    prompt = mocker.patch('flag_slurper.config.prompt')
+    prompt = mocker.patch('flag_slurper.conf.config.prompt')
     prompt.side_effect = ['ABC', '']
     click = mocker.patch('flag_slurper.cli.click.prompt')
     click.return_value = 0
@@ -134,7 +134,7 @@ def test_cli_load_project_append_file(mocker, dummy_cmd, tmpdir):
 
 
 def test_cli_shell(mocker):
-    prompt = mocker.patch('flag_slurper.config.prompt')
+    prompt = mocker.patch('flag_slurper.conf.config.prompt')
     prompt.side_effect = ['ABC', '']
     click = mocker.patch('flag_slurper.cli.click.prompt')
     click.return_value = 0
