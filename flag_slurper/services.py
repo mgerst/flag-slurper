@@ -8,7 +8,7 @@ from flag_slurper.conf.project import Project
 
 @click.group()
 @click.pass_context
-def service(ctx):
+def services(ctx):
     """
     Manage services.
     """
@@ -20,7 +20,7 @@ def service(ctx):
     ctx.obj = p
 
 
-@service.command()
+@services.command()
 @click.option('-t', '--team', default=None)
 def ls(team):
     """
@@ -29,7 +29,7 @@ def ls(team):
     query = Service.select(Service.id, Team.number, Service.service_name, Service.service_port, Service.service_url,
                            Service.is_rand, Service.high_target, Service.low_target).join(Team)
     if team:
-        query = query.where(Service.team == team)
+        query = query.where(Service.team.number == team)
 
     services = [
         [s.id, s.team.number, s.service_name, s.service_port, s.service_url, s.is_rand, s.high_target, s.low_target] for
@@ -39,7 +39,7 @@ def ls(team):
     utils.conditional_page(table.table, len(services))
 
 
-@service.command()
+@services.command()
 @click.argument('id')
 @click.argument('name')
 @click.option('-p', '--port', required=True)
@@ -56,7 +56,7 @@ def add(id, name, port, url, admin, is_rand, high, low, team):
         click.secho('Service added.', fg='green')
 
 
-@service.command()
+@services.command()
 @click.argument('id')
 def rm(id):
     with database_proxy.obj:
