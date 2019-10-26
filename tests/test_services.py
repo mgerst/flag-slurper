@@ -50,6 +50,7 @@ def test_list_service_excluded_team(service, services_project):
 
 def test_rm_service(service, services_project):
     runner = CliRunner()
-    result = runner.invoke(cli, ['-p', services_project, 'services', 'rm', service.id])
+    result = runner.invoke(cli, ['-p', services_project, 'services', 'rm', str(service.id)])
     assert result.exit_code == 0
-    assert Service.select().where(Service.id == service.id).count()
+    assert 'Service removed.' in result.output
+    assert Service.select().where(Service.id == service.id).count() == 0
