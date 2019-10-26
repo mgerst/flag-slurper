@@ -46,3 +46,10 @@ def test_list_service_excluded_team(service, services_project):
     result = runner.invoke(cli, ['-p', services_project, 'services', 'ls', '-t', '3'])
     assert result.exit_code == 0
     assert service.service_name not in result.output
+
+
+def test_rm_service(service, services_project):
+    runner = CliRunner()
+    result = runner.invoke(cli, ['-p', services_project, 'services', 'rm', service.id])
+    assert result.exit_code == 0
+    assert Service.select().where(Service.id == service.id).count()
