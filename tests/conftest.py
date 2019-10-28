@@ -92,7 +92,7 @@ def basic_project(create_project):
 def runner():
     runner = CliRunner()
 
-    def _wrapped(project, options):
-        return runner.invoke(cli, ['-p', project, *options])
+    def _wrapped(project, *args):
+        return runner.invoke(cli, ['-p', project, *args])
 
     return _wrapped
