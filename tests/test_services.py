@@ -60,4 +60,4 @@ def test_edit_service(runner, service, services_project):
     result = runner(services_project, 'services', 'edit', str(service.id), '-u', '192.168.10.12')
     assert result.exit_code == 0
     assert result.output == f'[+] Updated service {service.id}\n'
-    assert Service.select().where(Service.id == service.id).service_url == '192.168.10.12'
+    assert Service.get_by_id(service.id).service_url == '192.168.10.12'
