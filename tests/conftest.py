@@ -1,10 +1,12 @@
 from textwrap import dedent
 
 import pytest
+from click.testing import CliRunner
 from peewee import PostgresqlDatabase
 from yaml import safe_load
 
 from flag_slurper.autolib import models
+from flag_slurper.cli import cli
 from flag_slurper.conf import Project
 from flag_slurper.conf.config import Config
 
@@ -84,3 +86,13 @@ def basic_project(create_project):
     p = Project.get_instance()
     p.load(str(tmpdir.join('project.yml')))
     return p
+
+
+@pytest.fixture
+def runner():
+    runner = CliRunner()
+
+    def _wrapped(project, options):
+        return runner.invoke(cli, ['-p', project, *options])
+
+    return _wrapped

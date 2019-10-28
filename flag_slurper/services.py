@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import click
 from terminaltables import AsciiTable
 
@@ -54,6 +56,21 @@ def add(id, name, port, url, admin, is_rand, high, low, team):
         Service.create(id=id, remote_id=id, service_id=id, service_name=name, service_port=port, service_url=url,
                        service_admin=admin, is_rand=is_rand, high=high, low=low, team=team)
         click.secho('Service added.', fg='green')
+
+
+@services.command()
+@click.argument('id')
+@click.option('-n', '--name', 'service_name', default=None)
+@click.option('-p', '--port', 'service_port', default=None)
+@click.option('-u', '--url', 'service_url', default=None)
+@click.option('-a', '--admin', 'admin_status', type=click.Choice(['DOWN', 'CAPPED']), default=None)
+@click.option('-r', '--is-rand', type=click.BOOL, default=None)
+@click.option('-i', '--high', 'high_target', default=None)
+@click.option('-l', '--low', 'low_target', default=None)
+def edit(id, **kwargs):
+    updates = {key: value for (key, value) in kwargs.items() if value is not None}
+    Service.update(**updates).where(Service.id == id).execute()
+    utils.report_success(f'Updated service {id}')
 
 
 @services.command()
