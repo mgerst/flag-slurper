@@ -58,6 +58,21 @@ def add(id, name, port, url, admin, is_rand, high, low, team):
 
 @services.command()
 @click.argument('id')
+@click.option('-n', '--name', 'service_name', default=None)
+@click.option('-p', '--port', 'service_port', default=None)
+@click.option('-u', '--url', 'service_url', default=None)
+@click.option('-a', '--admin', 'admin_status', type=click.Choice(['DOWN', 'CAPPED']), default=None)
+@click.option('-r', '--is-rand', type=click.BOOL, default=None)
+@click.option('-i', '--high', 'high_target', default=None)
+@click.option('-l', '--low', 'low_target', default=None)
+def edit(id, **kwargs):
+    updates = {key: value for (key, value) in kwargs.items() if value is not None}
+    Service.update(**updates).where(Service.id == id).execute()
+    utils.report_success(f'Updated service {id}')
+
+
+@services.command()
+@click.argument('id')
 def rm(id):
     with database_proxy.obj:
         Service.delete().where(Service.id == id).execute()
