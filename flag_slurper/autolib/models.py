@@ -67,7 +67,7 @@ class Credential(BaseModel):
 
 class Flag(BaseModel):
     id = peewee.AutoField(primary_key=True)
-    team = peewee.ForeignKeyField(Team, backref='flags')
+    team = peewee.ForeignKeyField(Team, backref='flags', on_delete='CASCADE')
     name = peewee.CharField(max_length=150)
 
 

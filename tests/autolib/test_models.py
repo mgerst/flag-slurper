@@ -1,7 +1,6 @@
 import click
-import pytest
 
-from flag_slurper.autolib.models import CredentialBag, Credential, CaptureNote
+from flag_slurper.autolib.models import CaptureNote, Flag
 
 SUDO_FLAG = click.style('!', fg='red', bold=True)
 
@@ -38,3 +37,10 @@ def test_capture_note__str__(flag, service):
 def test_capture_note_sudo__str__(flag, service):
     note = CaptureNote(flag=flag, service=service, data='abcd', location='/root/test.flag', notes='did stuff\nUsed Sudo')
     assert note.__str__() == "/root/test.flag -> abcd{}".format(SUDO_FLAG)
+
+
+def test_flag_on_delete_cascade(team, flag):
+    initial = Flag.select().count()
+    team.delete().execute()
+    after = Flag.select().count()
+    assert initial - after == 1
