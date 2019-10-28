@@ -60,6 +60,21 @@ def test_list_filter_by_username(runner, keys_project, shared_key):
     assert shared_key.username in result.output
 
 
+def test_show_key(runner, shared_key, keys_project, mocker):
+    edit = mocker.patch('flag_slurper.keys.click.edit')
+    result = runner(keys_project, 'keys', 'show', str(shared_key.id))
+    assert result.exit_code == 0
+    assert edit.called
+    assert shared_key.username in result.output
+
+
+def test_get_key(runner, shared_key, keys_project, tmpdir):
+    file = tmpdir.join('test.priv')
+    result = runner(keys_project, 'keys', 'get', str(shared_key.id), str(file))
+    assert result.exit_code == 0
+    assert file.read() == shared_key.contents
+
+
 def test_add_key(runner, keys_project, db, tmpdir):
     keyfile = tmpdir.join('keyfile')
     keyfile.write('TEST KEY')
@@ -75,3 +90,10 @@ def test_add_key_for_team(runner, team, keys_project, tmpdir):
     assert result.exit_code == 0
     assert '[+] Added key for cdc'
     assert Key.select().order_by(Key.id.desc()).get().team.number == 1
+
+
+def test_rm_key(runner, keys_project, shared_key):
+    result = runner(keys_project, 'keys', 'rm', str(shared_key.id))
+    assert result.exit_code == 0
+    assert result.output == 'Key removed.\n'
+    assert Key.select().where(Key.id == shared_key.id).count() == 0
