@@ -80,7 +80,7 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf,
                         if flag:
                             enable_search = False
                             CaptureNote.get_or_create(flag=flag_obj, data=flag, location=full_location,
-                                                      notes=str(sysinfo), service=service, used_creds=sudo_cred)
+                                                      notes=str(sysinfo), service=service, used_creds=cred)
 
                     if enable_search:
                         local_flags = find_flags(ssh, base_dir=base_dir)
