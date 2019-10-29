@@ -1,7 +1,7 @@
 import pytest
 from click.testing import CliRunner
 
-from flag_slurper.autolib.models import Service
+from flag_slurper.autolib.models import Service, Team
 from flag_slurper.cli import cli
 from flag_slurper.conf.project import Project
 
@@ -46,6 +46,25 @@ def test_list_service_excluded_team(service, services_project):
     result = runner.invoke(cli, ['-p', services_project, 'services', 'ls', '-t', '3'])
     assert result.exit_code == 0
     assert service.service_name not in result.output
+
+
+def test_add_service(runner, team, services_project):
+    before = Service.select().count()
+    result = runner(services_project, 'services', 'add', '100', 'WWW HTTP', '-p', '80', '-u', 'www.team1.isucdc.com',
+                    '-t', str(team.number))
+    assert result.exit_code == 0
+    assert result.output == '[+] Service added\n'
+    assert Service.select().count() - before == 1
+
+
+def test_mass_add_service(runner, team, services_project):
+    before = Service.select().count()
+    result = runner(services_project, 'services', 'mass-add', 'WWW HTTP', '-p', '80', '-u', 'www.team{num}.isucdc.com')
+    assert result.exit_code == 0
+    assert result.output == '[+] Mass added service WWW HTTP\n'
+    assert Service.select().count() - before == Team.select().count()
+    service = Service.select().where(Service.team == team, Service.service_name == 'WWW HTTP').get()
+    assert service.service_url == f'www.team{team.number}.isucdc.com'
 
 
 def test_rm_service(service, services_project):
