@@ -106,8 +106,15 @@ class DNSResult(BaseModel):
     record = peewee.TextField()
 
 
+class Key(BaseModel):
+    id = peewee.AutoField(primary_key=True)
+    team = peewee.ForeignKeyField(Team, backref='keys', on_delete='CASCADE', null=True)
+    username = peewee.TextField()
+    contents =peewee.TextField()
+
+
 def create():  # pragma: no cover
-    database_proxy.create_tables([CredentialBag, Team, Service, Credential, Flag, CaptureNote, File, DNSResult])
+    database_proxy.create_tables([CredentialBag, Team, Service, Credential, Flag, CaptureNote, File, DNSResult, Key])
 
 
 def delete():  # pragma: no cover
@@ -122,3 +129,4 @@ def delete():  # pragma: no cover
     list(map(_del_instance, CaptureNote.select()))
     list(map(_del_instance, File.select()))
     list(map(_del_instance, DNSResult.select()))
+    list(map(_del_instance, Key.select()))

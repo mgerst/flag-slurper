@@ -11,7 +11,7 @@ from flag_slurper.conf import Project
 from flag_slurper.conf.config import Config
 
 MODELS = [models.Service, models.Credential, models.CredentialBag, models.Team, models.Flag, models.CaptureNote,
-          models.File, models.DNSResult]
+          models.File, models.DNSResult, models.Key]
 
 
 @pytest.fixture
@@ -94,5 +94,13 @@ def runner():
 
     def _wrapped(project, *args):
         return runner.invoke(cli, ['-p', project, *args])
+    return _wrapped
 
+
+@pytest.fixture
+def np_runner():
+    runner = CliRunner()
+
+    def _wrapped(*args):
+        return runner.invoke(cli, ['-np', *args])
     return _wrapped
