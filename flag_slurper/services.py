@@ -50,10 +50,26 @@ def ls(team):
 @click.option('-l', '--low', default=None)
 @click.option('-t', '--team', required=True)
 def add(id, name, port, url, admin, is_rand, high, low, team):
-    with database_proxy.obj:
-        Service.create(id=id, remote_id=id, service_id=id, service_name=name, service_port=port, service_url=url,
-                       service_admin=admin, is_rand=is_rand, high=high, low=low, team=team)
-        click.secho('Service added.', fg='green')
+    Service.create(id=id, remote_id=id, service_id=id, service_name=name, service_port=port, service_url=url,
+                   service_admin=admin, is_rand=is_rand, high=high, low=low, team=team)
+    utils.report_success('Service added')
+
+
+@services.command()
+@click.argument('name')
+@click.option('-p', '--port', type=click.INT, required=True)
+@click.option('-u', '--url', type=click.STRING, required=True)
+@click.option('-r', '--is-rand', is_flag=True, default=False)
+@click.option('-i', '--high', type=click.INT, default=None)
+@click.option('-l', '--low', type=click.INT, default=None)
+def mass_add(name: str, port: int, url: str, is_rand: bool, high: int, low: int):
+    """
+    Add a service to all teams.
+    """
+    for team in Team.select():
+        Service.create(service_name=name, service_port=port, service_url=url.format(num=team.number), is_rand=is_rand,
+                       high=high, low=low, team=team)
+    utils.report_success(f'Mass added service {name}')
 
 
 @services.command()
@@ -74,6 +90,5 @@ def edit(id, **kwargs):
 @services.command()
 @click.argument('id')
 def rm(id):
-    with database_proxy.obj:
-        Service.delete().where(Service.id == id).execute()
-        click.secho('Service removed.', fg='red')
+    Service.delete().where(Service.id == id).execute()
+    click.secho('Service removed.', fg='red')

@@ -35,8 +35,8 @@ class Team(BaseModel):
 
 class Service(BaseModel):
     id = peewee.AutoField(primary_key=True)
-    remote_id = peewee.IntegerField(unique=True)
-    service_id = peewee.IntegerField()
+    remote_id = peewee.IntegerField(unique=True, null=True)
+    service_id = peewee.IntegerField(null=True)
     service_name = peewee.CharField(max_length=100)
     service_port = peewee.SmallIntegerField()
     service_url = peewee.CharField(max_length=100)
