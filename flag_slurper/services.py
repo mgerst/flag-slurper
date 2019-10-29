@@ -58,7 +58,8 @@ def add(id, name, port, url, admin, is_rand, high, low, team):
 @services.command()
 @click.argument('name')
 @click.option('-p', '--port', type=click.INT, required=True)
-@click.option('-u', '--url', type=click.STRING, required=True)
+@click.option('-u', '--url', type=click.STRING, required=True,
+              help='You may use {num} to replace the team number in the URL')
 @click.option('-r', '--is-rand', is_flag=True, default=False)
 @click.option('-i', '--high', type=click.INT, default=None)
 @click.option('-l', '--low', type=click.INT, default=None)
