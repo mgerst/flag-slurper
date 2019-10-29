@@ -37,6 +37,8 @@ dnspython = "^1.16"
 Faker = "^2.0"
 paramiko = {version = "^2.6", optional = true}
 psycopg2-binary = {version = "^2.8", optional = true}
+vistir = "^0.4.3"
+shellingham = "^1.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.4"

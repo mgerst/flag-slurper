@@ -87,7 +87,10 @@ def plant(conf, team):
 
 @cli.command()
 @pass_conf
-def shell(config):
+def dbshell(config):
+    """
+    A python shell for debugging purposes.
+    """
     p = Project.get_instance()
     if not p.enabled:
         utils.report_error("The shell requires an active project")
@@ -121,6 +124,7 @@ from .teams import team
 from .services import services
 from .files import files
 from .notes import notes
+from .shell import shell
 cli.add_command(config)
 cli.add_command(creds)
 cli.add_command(dns)
@@ -129,6 +133,7 @@ cli.add_command(team)
 cli.add_command(services)
 cli.add_command(files)
 cli.add_command(notes)
+cli.add_command(shell)
 
 # Feature detect remote functionality
 try:
