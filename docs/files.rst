@@ -1,6 +1,6 @@
 Files
 =====
-Flag slurper contains a database of files found on competitior machines. This is normally populated by the
+Flag slurper contains a database of files found on competition machines. This is normally populated by the
 `AutoPWN <autopwn_overview>`_ functionality. All file commands require that a `Project <projects>`_ is set.
 
 Usage

@@ -1,9 +1,43 @@
 from io import BytesIO, StringIO
+from textwrap import dedent
 
 import pytest
 from schema import SchemaError, Optional
 
-from flag_slurper.autolib import post
+from flag_slurper.autolib import post, models
+
+SHADOW_FILE = dedent("""
+root:$6$tLFrPk73$3dvrIViNCOl8F4ib63vWlliwqklJofCqIv0.Oc5.rTEKr4KOU5jzYNhoRf9E6.6xSjfLd66UpCThA0Vk4ntOu/:18349:0:99999:7:::
+daemon:*:17959:0:99999:7:::
+bin:*:17959:0:99999:7:::
+sys:*:17959:0:99999:7:::
+sync:*:17959:0:99999:7:::
+games:*:17959:0:99999:7:::
+man:*:17959:0:99999:7:::
+lp:*:17959:0:99999:7:::
+mail:*:17959:0:99999:7:::
+news:*:17959:0:99999:7:::
+uucp:*:17959:0:99999:7:::
+proxy:*:17959:0:99999:7:::
+www-data:*:17959:0:99999:7:::
+backup:*:17959:0:99999:7:::
+list:*:17959:0:99999:7:::
+irc:*:17959:0:99999:7:::
+gnats:*:17959:0:99999:7:::
+nobody:*:17959:0:99999:7:::
+libuuid:!:17959:0:99999:7:::
+syslog:*:17959:0:99999:7:::
+messagebus:*:18320:0:99999:7:::
+landscape:*:18320:0:99999:7:::
+cdc:$6$Jo7WSjVM$LgeIDfPuWg/mKtHJPtYonwj16KlinOFb17bKe52/WxcqcSZVQETx7rz4aKO5Nxnf2wauChXB87CYqzVpTmyJb0:18320:0:99999:7:::
+sshd:*:18320:0:99999:7:::
+wildfly:!:18320:0:99999:7:::
+chris:!:18322:0:99999:7:::
+bob:!:18322:0:99999:7:::
+alice:!:18322:0:99999:7:::
+telnetd:*:18323:0:99999:7:::
+ntp:*:18349:0:99999:7:::
+""").strip()
 
 
 class TestPlugin(post.PostPlugin):
@@ -144,3 +178,29 @@ def test_ssh_plugin_run(service, mocker, sudobag, sudocred):
 
     assert run_sudo.called
     assert ssh.exec_command.called
+
+
+def test_shadow_plugin_predicate_accepts(service):
+    plugin = post.ShadowExtractor()
+    service.service_port = 22
+    assert plugin.predicate(service, post.PostContext())
+
+
+def test_shadow_plugin_predicate_rejects(service):
+    plugin = post.ShadowExtractor()
+    assert not plugin.predicate(service, post.PostContext())
+
+
+def test_shadow_plugin_run(service, mocker):
+    context = post.PostContext()
+    shadow = models.File.create(service=service, path='/etc/shadow', contents=SHADOW_FILE)
+
+    plugin = post.ShadowExtractor()
+    plugin.run(service, context)
+
+    assert models.ShadowEntry.select().count() == 2
+
+    entry = models.ShadowEntry.select().first()
+    assert entry.source == shadow
+    assert entry.username == 'root'
+    assert entry.hash == '$6$tLFrPk73$3dvrIViNCOl8F4ib63vWlliwqklJofCqIv0.Oc5.rTEKr4KOU5jzYNhoRf9E6.6xSjfLd66UpCThA0Vk4ntOu/'
