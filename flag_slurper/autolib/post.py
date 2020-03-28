@@ -368,7 +368,8 @@ class ShadowExtractor(PostPlugin):
     @staticmethod
     def _parse_shadow(line: str, file: File, service: Service):
         (username, hash, *_) = line.split(':')
-        if hash == '*':
+        if hash == '*' or hash == '!':
+            logger.debug('skipping user without hash %s', username)
             return
 
         logger.info('Found valid hash for %s', username)

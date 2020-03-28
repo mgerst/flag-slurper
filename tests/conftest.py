@@ -11,7 +11,7 @@ from flag_slurper.conf import Project
 from flag_slurper.conf.config import Config
 
 MODELS = [models.Service, models.Credential, models.CredentialBag, models.Team, models.Flag, models.CaptureNote,
-          models.File, models.DNSResult, models.Key]
+          models.File, models.DNSResult, models.Key, models.ShadowEntry]
 
 
 @pytest.fixture
