@@ -16,7 +16,7 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from collections import deque
-from typing import Tuple, Type, Dict, List
+from typing import Tuple, Type, Dict, List, Iterable
 
 import paramiko
 from schema import Schema, Optional
@@ -273,7 +273,7 @@ class SSHFileExfil(PostPlugin):
                 'merge_files': True,
             }
 
-        credentials: Credential = context['credentials']
+        credentials: Iterable[Credential] = context['credentials']
         ssh: paramiko.SSHClient = context['ssh']
 
         def _map_creds(bag):

