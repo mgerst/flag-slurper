@@ -381,3 +381,4 @@ class ShadowExtractor(PostPlugin):
 
 registry = PluginRegistry()
 registry.register(SSHFileExfil)
+registry.register(ShadowExtractor)
