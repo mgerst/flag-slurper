@@ -113,8 +113,17 @@ class Key(BaseModel):
     contents =peewee.TextField()
 
 
+class ShadowEntry(BaseModel):
+    id = peewee.AutoField(primary_key=True)
+    source = peewee.ForeignKeyField(File, backref='shadow_entries', on_delete='CASCADE')
+    service = peewee.ForeignKeyField(Service, backref='shadow_entries', on_delete='CASCADE')
+    username = peewee.TextField()
+    hash = peewee.TextField()
+
+
 def create():  # pragma: no cover
-    database_proxy.create_tables([CredentialBag, Team, Service, Credential, Flag, CaptureNote, File, DNSResult, Key])
+    database_proxy.create_tables([CredentialBag, Team, Service, Credential, Flag, CaptureNote, File, DNSResult, Key,
+                                  ShadowEntry])
 
 
 def delete():  # pragma: no cover
@@ -130,3 +139,4 @@ def delete():  # pragma: no cover
     list(map(_del_instance, File.select()))
     list(map(_del_instance, DNSResult.select()))
     list(map(_del_instance, Key.select()))
+    list(map(_del_instance, ShadowEntry.select()))

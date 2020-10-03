@@ -124,6 +124,7 @@ from .teams import team
 from .services import services
 from .files import files
 from .notes import notes
+from .shadow.cmd import shadow
 from .shell import shell
 cli.add_command(config)
 cli.add_command(creds)
@@ -133,6 +134,7 @@ cli.add_command(team)
 cli.add_command(services)
 cli.add_command(files)
 cli.add_command(notes)
+cli.add_command(shadow)
 cli.add_command(shell)
 
 # Feature detect remote functionality

