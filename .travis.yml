@@ -27,7 +27,7 @@ jobs:
       script:
         - tox
       after_success:
-        - if [[ "$TOXENV" -eq "py38" ]]; then coverage xml; codecov; fi
+        - set -x; if [[ "$TOXENV" -eq "py38" ]]; then coverage xml; codecov; fi
     - stage: deploy
       script:
         - echo Deploying to PyPI
