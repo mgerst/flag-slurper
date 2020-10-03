@@ -1,7 +1,6 @@
 language: python
 cache: pip
 python:
-  - "3.7"
   - "3.8"
 
 env:
@@ -28,7 +27,7 @@ jobs:
       script:
         - tox
       after_success:
-        - if [[ "$TOXENV" -eq "py37" ]]; then coverage xml; codecov; fi
+        - if [[ "$TOXENV" -eq "py38" ]]; then coverage xml; codecov; fi
     - stage: deploy
       script:
         - echo Deploying to PyPI
