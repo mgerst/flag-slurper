@@ -126,10 +126,13 @@ def pwn(config, verbose, parallel, processes, limit_creds, team, service, random
 
 @autopwn.command()
 @click.option('-r', '--reconcile', is_flag=True, help='Remove teams that do not exist in IScorE')
-def generate(reconcile):
+@pass_config
+def generate(config, reconcile):
     p = Project.get_instance()
     p.connect_database()
-    teams = utils.get_teams()
+    if config.getboolean('iscore', 'ignore_guest_division'):
+        utils.report_status('Ignoring guest division')
+    teams = utils.get_teams(config.getboolean('iscore', 'ignore_guest_division'))
 
     if reconcile:
         ids = [t['id'] for t in teams]

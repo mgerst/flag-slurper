@@ -68,13 +68,17 @@ def save_flags(flags, team=None, base_path=None):
     z.close()
 
 
-def get_teams() -> list:
+def get_teams(guest_division: bool) -> list:
     conf = Config.get_instance()
     url = '{}/teams.json'.format(conf.api_url)
 
     resp = requests.get(url)
     resp.raise_for_status()
     resp = resp.json()
+
+    if not guest_division:
+        resp = list(filter(lambda t: not t['guest_division'], resp))
+
     return resp
 
 

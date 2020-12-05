@@ -158,9 +158,15 @@ def test_get_service_status():
 @pytest.mark.skipif(not EXTERNAL_TESTS, reason="External tests disabled")
 @vcr.use_cassette('fixtures/teams.yaml')
 def test_get_teams(config):
-    teams = utils.get_teams()
-
+    teams = utils.get_teams(True)
     assert len(teams) == 20
+
+
+@pytest.mark.skipif(not EXTERNAL_TESTS, reason="External tests disabled")
+@vcr.use_cassette('fixtures/teams.yaml')
+def test_gets_teams_filter_guest(config):
+    teams = utils.get_teams(False)
+    assert len(teams) == 18
 
 
 
