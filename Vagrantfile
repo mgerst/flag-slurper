@@ -4,7 +4,7 @@
 N = 4
 
 Vagrant.configure("2") do |config|
-    config.vm.box = "debian/contrib-stretch64"
+    config.vm.box = "debian/buster64"
     config.vm.synced_folder '.', '/vagrant', disabled: true
     config.ssh.insert_key = false
 
@@ -12,6 +12,11 @@ Vagrant.configure("2") do |config|
         v.memory = 256
         v.cpus = 1
         v.linked_clone = true
+    end
+
+    config.vm.provider :libvirt do |libvirt|
+        libvirt.cpus = 1
+        libvirt.memory = 256
     end
 
     (1..N).each do |n|
@@ -34,7 +39,8 @@ Vagrant.configure("2") do |config|
             }
             ansible.groups = {
                 'dns': ['dns'],
-                'smtp': ['team1']
+                'smtp': ['team1'],
+                'mysql': ['team2'],
             }
         end
     end

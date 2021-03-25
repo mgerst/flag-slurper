@@ -238,6 +238,18 @@ class PluginRegistry:
         return all(results)
 
 
+registry = PluginRegistry()
+
+
+def register(klass: Type[PostPlugin]):
+    """
+    A decorator to register a PostPlugin with the registry.
+    """
+    registry.register(klass)
+    return klass
+
+
+@register
 class SSHFileExfil(PostPlugin):
     """
     The ``ssh_exfil`` plugin attempt to find as many ``SENSITIVE_FILES`` as possible.
@@ -345,6 +357,7 @@ class SSHFileExfil(PostPlugin):
         return service.service_port == 22
 
 
+@register
 class ShadowExtractor(PostPlugin):
     """
     Extract hashes out of collected files.
@@ -356,7 +369,7 @@ class ShadowExtractor(PostPlugin):
     context_schema = {}
     depends_on = ['ssh_exfil']
 
-    def run(self, service: Service, context: PostContext):
+    def run(self, service: Service, context: PostContext) -> bool:
         super().run(service, context)
         logger.debug('Running post shadow extractor')
 
@@ -364,9 +377,14 @@ class ShadowExtractor(PostPlugin):
         for file in files:
             contents = file.contents.tobytes().decode('utf-8')
             [self._parse_shadow(line, file, service) for line in contents.split('\n')]
+        return True
 
     @staticmethod
     def _parse_shadow(line: str, file: File, service: Service):
+        if not len(line) > 0:
+            return
+
+        logger.debug('Parsing shadow line %s', line)
         (username, hash, *_) = line.split(':')
         if hash == '*' or hash == '!':
             logger.debug('skipping user without hash %s', username)
@@ -379,6 +397,21 @@ class ShadowExtractor(PostPlugin):
         return service.service_port == 22
 
 
-registry = PluginRegistry()
-registry.register(SSHFileExfil)
-registry.register(ShadowExtractor)
+@register
+class MySQLExtractor(PostPlugin):
+    """
+    Extract information out of mysql connections.
+    """
+    name = 'mysql'
+    schema = {
+        Optional('flag_query', default=None): str,
+    }
+    context_schema = {
+        'credentials': object,
+    }
+
+    def run(self, service: Service, context: PostContext) -> bool:
+        return False
+
+    def predicate(self, service: Service, context: PostContext) -> bool:
+        return service.service_port == 3306

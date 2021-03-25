@@ -43,6 +43,11 @@ class Governor:
             Governor.instance = cls(enabled, delay, window, times)
         return Governor.instance
 
+    @classmethod
+    def govern(cls, url: str):
+        gov = cls.get_instance()
+        gov.attempt(gov.resolve_url(url))
+
     def filter(self, ipaddr: str):
         def _filter(x: datetime):
             return x > datetime.now() - timedelta(seconds=self.window)

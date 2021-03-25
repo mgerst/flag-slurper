@@ -12,6 +12,7 @@ SERVICE_MAP = {
     53: 'dns',
     80: 'http',
     443: 'https',
+    3306: 'mysql',
     3389: 'rdp',
 }
 

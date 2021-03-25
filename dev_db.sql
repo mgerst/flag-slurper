@@ -14,4 +14,5 @@ VALUES
     (3, 3, 'WWW SSH', '192.168.3.13', 22, 3, false),
     (4, 4, 'WWW SSH', '192.168.3.14', 22, 4, false),
     (5, 5, 'DNS', '192.168.3.11', 53, 1, false), -- DNS is handled automatically
-    (6, 6, 'WWW SMTP', '192.168.3.11', 25, 1, false);
+    (6, 6, 'WWW SMTP', '192.168.3.11', 25, 1, false),
+    (7, 7, 'WWW DB', '192.168.3.12', 3306, 2, false);
