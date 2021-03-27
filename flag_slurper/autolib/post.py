@@ -23,7 +23,7 @@ from schema import Schema, Optional
 
 from flag_slurper.autolib import Service
 from .exploit import get_directory, get_file, run_command, run_sudo, expand_wildcard
-from .models import Credential, File, ShadowEntry
+from .models import Credential, File, ShadowEntry, Database, CaptureNote, Flag
 
 logger = logging.getLogger(__name__)
 
@@ -404,14 +404,46 @@ class MySQLExtractor(PostPlugin):
     """
     name = 'mysql'
     schema = {
+        'flag_name': str,
         Optional('flag_query', default=None): str,
+        Optional('flag_db', default=None): str,
     }
     context_schema = {
-        'credentials': object,
+        'credentials': [object],
     }
 
     def run(self, service: Service, context: PostContext) -> bool:
-        return False
+        import mysql.connector
+        logger.info('Running mysql extractor')
+        flag = Flag.get_or_create(team=service.team, name=self.config['flag_name'])[0]
+
+        for conn in context['credentials']:
+            db = mysql.connector.connect(host=conn['url'], port=conn['port'], user=conn['user'], passwd=conn['passwd'])
+            cursor = db.cursor()
+            cursor.execute('SELECT version()')
+            version = cursor.fetchall()[0][0]
+            Database.get_or_create(service=service, type='mysql', version=version, username=conn['user'], password=conn['passwd'])
+            db.disconnect()
+
+            if 'flag_query' in self.config and 'flag_db' in self.config:
+                flag_query = self.config['flag_query']
+                try:
+                    logger.info("Attempting flag query '%s' in db %s", flag_query, self.config['flag_db'])
+                    db = mysql.connector.connect(host=conn['url'], port=conn['port'], user=conn['user'], passwd=conn['passwd'], database=self.config['flag_db'])
+                    cursor = db.cursor()
+                    cursor.execute(flag_query)
+
+                    results = cursor.fetchone()
+                    if cursor.rowcount != 1:
+                        logger.warning("Could not find flags for query '%s'", flag_query)
+                        continue
+                    flag_contents = results[0]
+                    logger.info('Found flag with query: %s', flag_contents)
+                    CaptureNote.get_or_create(flag=flag, data=flag_contents, location=f"mysql:{flag_query}", service=service)
+                finally:
+                    db.disconnect()
+
+        return True
 
     def predicate(self, service: Service, context: PostContext) -> bool:
         return service.service_port == 3306

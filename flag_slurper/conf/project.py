@@ -2,6 +2,7 @@ import typing as tp
 from copy import deepcopy
 from pathlib import Path
 
+import click
 from jinja2 import Environment
 from schema import Schema, Use, Optional
 from yaml import safe_load
@@ -171,3 +172,6 @@ class Project:
         conf = Config.get_instance()
         db_path = conf.database(str(self.base))
         models.initialize(db_path)
+
+
+pass_project = click.make_pass_decorator(Project)

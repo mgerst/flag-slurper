@@ -43,13 +43,13 @@ def cli(ctx, config, iscore_url, api_token, project, debug, no_project):
 
     if debug:  # pragma: no cover
         import logging
-        if debug > 1:
+        if debug > 2:
             logger = logging.getLogger("peewee")
             logger.setLevel(logging.DEBUG)
             logger.addHandler(logging.StreamHandler())
 
         logger = logging.getLogger('flag_slurper')
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.DEBUG if debug > 1 else logging.INFO)
         logger.addHandler(logging.StreamHandler())
 
 
@@ -122,6 +122,7 @@ from .services import services
 from .files import files
 from .notes import notes
 from .shadow.cmd import shadow
+from .databases import databases
 cli.add_command(config)
 cli.add_command(creds)
 cli.add_command(dns)
@@ -131,6 +132,7 @@ cli.add_command(services)
 cli.add_command(files)
 cli.add_command(notes)
 cli.add_command(shadow)
+cli.add_command(databases)
 
 # Feature detect remote functionality
 try:

@@ -9,14 +9,14 @@ Vagrant.configure("2") do |config|
     config.ssh.insert_key = false
 
     config.vm.provider :virtualbox do |v|
-        v.memory = 256
+        v.memory = 512
         v.cpus = 1
         v.linked_clone = true
     end
 
     config.vm.provider :libvirt do |libvirt|
         libvirt.cpus = 1
-        libvirt.memory = 256
+        libvirt.memory = 512
     end
 
     (1..N).each do |n|
@@ -36,6 +36,7 @@ Vagrant.configure("2") do |config|
             ansible.extra_vars = {
                 'apt_cache_enabled': ENV['APT_CACHE_ENABLED'] == 'true' || false,
                 'apt_cache_url': ENV['APT_CACHE_URL'],
+                'ansible_python_interpreter': '/usr/bin/python3',
             }
             ansible.groups = {
                 'dns': ['dns'],

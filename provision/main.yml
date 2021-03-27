@@ -7,11 +7,14 @@
       when: apt_cache_enabled
 
     - name: Install apt packages
-      apt: name={{ item }} state=present update_cache=yes cache_valid_time=86000
-      with_items:
-        - vim
-        - htop
-        - openssh-server
+      apt:
+        name:
+          - vim
+          - htop
+          - openssh-server
+        state: present
+        update_cache: yes
+        cache_valid_time: 8600
 
     - name: "Setup default creds: cdc:cdc"
       user:
@@ -75,9 +78,10 @@
   become: yes
   tasks:
     - name: Installing apt packages
-      apt: name={{ item }} state=present
-      with_items:
-        - bind9
+      apt:
+        name:
+          - bind9
+        state: present
 
     - name: Configure bind
       template: src={{ item }} dest=/etc/bind/{{ item }}
@@ -126,8 +130,45 @@
 - hosts: mysql
   become: yes
   tasks:
+    - name: Set maraidab root password
+      debconf:
+        name: mariadb-server
+        question: '{{ item }}'
+        vtype: password
+        value: cdc
+      with_items:
+        - mariadb-server/root_password
+        - mariadb-server/root_password_again
+
     - name: Install packages
       apt:
         name:
           - mariadb-server
+          - python3-pip
         state: present
+
+    - name: Install python dependencies
+      pip:
+        name:
+          - PyMySQL
+        state: present
+
+    - name: Configure listen address
+      ini_file:
+        path: /etc/mysql/mariadb.conf.d/50-server.cnf
+        section: mysqld
+        option: bind-address
+        value: '0.0.0.0'
+      notify: reload mariadb
+
+    - name: Add default mysql user
+      become: true
+      mysql_user:
+        login_user: root
+        name: cdc
+        password: cdc
+        host_all: yes
+        priv: '*.*:ALL'
+  handlers:
+    - name: reload mariadb
+      service: name=mariadb state=restarted

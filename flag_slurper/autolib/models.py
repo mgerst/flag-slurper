@@ -121,9 +121,18 @@ class ShadowEntry(BaseModel):
     hash = peewee.TextField()
 
 
+class Database(BaseModel):
+    id = peewee.AutoField(primary_key=True)
+    type = peewee.CharField(max_length=50, choices=(('MySQL', 'mysql'),))
+    version = peewee.CharField(max_length=50)
+    service = peewee.ForeignKeyField(Service, backref='databases', on_delete='CASCADE')
+    username = peewee.CharField(max_length=100)
+    password = peewee.CharField(max_length=100)
+
+
 def create():  # pragma: no cover
     database_proxy.create_tables([CredentialBag, Team, Service, Credential, Flag, CaptureNote, File, DNSResult, Key,
-                                  ShadowEntry])
+                                  ShadowEntry, Database])
 
 
 def delete():  # pragma: no cover
@@ -140,3 +149,4 @@ def delete():  # pragma: no cover
     list(map(_del_instance, DNSResult.select()))
     list(map(_del_instance, Key.select()))
     list(map(_del_instance, ShadowEntry.select()))
+    list(map(_del_instance, Database.select()))
