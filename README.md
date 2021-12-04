@@ -33,7 +33,7 @@ You first need to create a project and result database:
 
 ```bash
 flag-slurper project init -b ~/cdcs/isu2-18 --name "ISU2 2018"
-flag-slurper project create_db
+flag-slurper project create-db
 ```
 
 To generate the team and service list you can simply run:
