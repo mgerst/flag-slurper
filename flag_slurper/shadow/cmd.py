@@ -36,7 +36,7 @@ def ls(team, service, username, format):
             shadows = shadows.where(ShadowEntry.service.service_name.contains(service))
 
         if username:
-            shadows = shadows.where(ShadowEntry.username.contains(service))
+            shadows = shadows.where(ShadowEntry.username.contains(username))
 
         if shadows.count() == 0:
             utils.report_warning("No shadow entries found")

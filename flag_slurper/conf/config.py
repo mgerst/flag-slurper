@@ -1,6 +1,7 @@
 from configparser import ConfigParser
 from pathlib import Path
 from typing import Optional
+import os
 
 from click import echo, prompt
 from jinja2 import Environment
@@ -22,6 +23,11 @@ class Config(ConfigParser):
         conffiles = [
             str(ROOT / 'default.ini'),
         ]
+
+        # We can't load the flagrc during tests, it starts using the
+        # wrong database name.
+        if 'PYTEST_CURRENT_TEST' in os.environ:
+            noflagrc = True
 
         if not noflagrc:
             conffiles.append(str((Path('~') / '.flagrc').expanduser()))

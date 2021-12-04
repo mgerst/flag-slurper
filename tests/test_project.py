@@ -6,7 +6,7 @@ from flag_slurper.cli import cli
 from flag_slurper.conf import Project
 
 
-@pytest.yield_fixture(scope='function', autouse=True)
+@pytest.fixture(scope='function', autouse=True)
 def project_manage():
     """
     Clear out the Project singleton after each use.
@@ -68,7 +68,7 @@ class TestCli:
     def test_project_env(self, basic_project):
         base = basic_project.base
         runner = CliRunner()
-        result = runner.invoke(cli, ['project', 'env', str(base)])
+        result = runner.invoke(cli, ['project', 'env', str(base)], catch_exceptions=False)
         assert result.exit_code == 0
         assert 'export SLURPER_PROJECT={}'.format(base) in result.output
         assert 'export unslurp' in result.output
