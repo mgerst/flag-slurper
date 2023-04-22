@@ -133,7 +133,7 @@ def test_cli_load_project_append_file(mocker, dummy_cmd, tmpdir):
     assert project.load.called_with(str(tmpdir.join('project.yml')))
 
 
-def test_cli_shell(mocker):
+def test_cli_dbshell(mocker):
     prompt = mocker.patch('flag_slurper.conf.config.prompt')
     prompt.side_effect = ['ABC', '']
     click = mocker.patch('flag_slurper.cli.click.prompt')
@@ -141,6 +141,14 @@ def test_cli_shell(mocker):
     code = mocker.patch('flag_slurper.cli.code.InteractiveConsole')
 
     runner = CliRunner()
-    result = runner.invoke(cli, ['shell'])
+    result = runner.invoke(cli, ['dbshell'])
     assert result.exit_code == 0
     assert code.called
+
+
+def test_cli_dbshell_no_project(np_runner):
+    p = Project.get_instance()
+    p.project_data = None
+    result = np_runner('dbshell')
+    assert result.exit_code == 4
+    assert result.output == '[!] The shell requires an active project\n'

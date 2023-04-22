@@ -38,6 +38,8 @@ Faker = "^2.0"
 paramiko = "^2.6"
 psycopg2-binary = "^2.8"
 asn1crypto = "^1.4.0"
+vistir = "^0.8.0"
+shellingham = "^1.5.0.post1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
