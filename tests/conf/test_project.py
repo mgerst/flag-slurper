@@ -5,7 +5,7 @@ from flag_slurper.conf import Project
 from flag_slurper.conf.project import project_schema, detect_version, project_schema_v1_0
 
 
-@pytest.yield_fixture(scope='function', autouse=True)
+@pytest.fixture(scope='function', autouse=True)
 def project_manage():
     """
     Clear out the Project singleton after each use.
@@ -383,7 +383,7 @@ def test_project_post_command(create_project, service):
           - ssh_exfil:
               files:
                 - /etc/testfile
-          
+
     """)
     p = Project.get_instance()
     p.load(str(tmpdir.join('project.yml')))

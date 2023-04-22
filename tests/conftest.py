@@ -1,3 +1,4 @@
+import os
 from textwrap import dedent
 
 import pytest
@@ -41,7 +42,13 @@ def create_project(tmpdir):
 
 @pytest.fixture
 def db():
-    test_db = PostgresqlDatabase('slurpertest')
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url:
+        print(f"Loading DB {database_url}")
+        test_db = PostgresqlDatabase(database_url)
+    else:
+        print("Using slurpertest DB")
+        test_db = PostgresqlDatabase('slurpertest')
 
     for model in MODELS:
         model.bind(test_db, bind_refs=False, bind_backrefs=False)
