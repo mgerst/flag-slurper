@@ -111,3 +111,28 @@ def np_runner():
     def _wrapped(*args):
         return runner.invoke(cli, ['-np', *args])
     return _wrapped
+
+
+@pytest.fixture()
+def cli_runner(create_project):
+    def _wrapped(args=None, project=None):
+        if not args:
+            args = []
+
+        if not project:
+            project = """
+            _version: "1.0"
+            project: Flag Slurper Test
+            base: {dir}/flag-test
+            """
+
+        tmpdir = create_project(project)
+        p = Project.get_instance()
+        filepath = str(tmpdir.join('project.yml'))
+        p.load(filepath)
+        args.insert(0, filepath)
+        args.insert(0, '-p')
+
+        runner = CliRunner()
+        return runner.invoke(cli, args)
+    return _wrapped
