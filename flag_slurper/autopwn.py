@@ -126,7 +126,8 @@ def pwn(config, verbose, parallel, processes, limit_creds, team, service, random
 
 @autopwn.command()
 @click.option('-r', '--reconcile', is_flag=True, help='Remove teams that do not exist in IScorE')
-def generate(reconcile):
+@pass_config
+def generate(config, reconcile):
     p = Project.get_instance()
     p.connect_database()
     teams = utils.get_teams()
@@ -140,6 +141,9 @@ def generate(reconcile):
 
     with models.database_proxy.obj:
         for team in teams:
+            if config['iscore']['ignore_guest_division'] and team['guest_division']:
+                continue
+
             t, _ = models.Team.get_or_create(id=team['id'], name=team['name'], number=team['number'],
                                              domain=team['team_url'])
         models.database_proxy.commit()
@@ -147,6 +151,9 @@ def generate(reconcile):
     # TODO: When /services.json gets fixed, use get_services()
     service_status = utils.get_service_status()
     for status in service_status:
+        if not models.Team.select().where(models.Team.id == status['team_id']).exists():
+            continue
+
         service = utils.get_service(status['service_name'])
         service_url = service['url'].format(num=status['team_number'])
         st, _ = models.Service.get_or_create(remote_id=status['id'], service_id=status['service_id'],
